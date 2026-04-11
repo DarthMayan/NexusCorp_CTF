@@ -1,72 +1,116 @@
 {% extends "base.html" %}
-{% block title %}Level 6 — CEO Vault{% endblock %}
+{% block title %}Level 6 — Vault API Fuzzing{% endblock %}
 
 {% block content %}
 <span class="level-badge {% if solved %}level-badge--solved{% else %}level-badge--active{% endif %}">
     Level 06 {% if solved %}— Cleared{% endif %}
 </span>
-<h1 class="section-title">CEO Vault</h1>
-<p class="section-subtitle">Top Secret — Clearance Level 5 Required</p>
+<h1 class="section-title">Vault API Fuzzing</h1>
+<p class="section-subtitle">nexus-vault-api — Hidden REST Service</p>
 
 <div class="briefing">
     <p>
-        This is it. The <strong>CEO Vault</strong> contains classified documents proving NEXUS Corp's
-        illegal operations. Only the <strong>vault_svc</strong> service account with
-        <strong>clearance_level 5</strong> can access it.
+        From the LDAP directory, you recovered the <strong>vault_svc</strong> service account
+        and cracked its SHA256 password hash: <code>V4ult_M4st3r_K3y!</code>.
+        This account has <strong>clearance_level 5</strong> — the highest in the organization.
     </p>
     <p>
-        You found vault_svc's SHA256 password hash in the LDAP directory (Level 5).
-        Crack it with <code>hashcat -m 1400</code> or <code>john --format=raw-sha256</code>,
-        then authenticate below.
+        Intelligence reports indicate the CEO Vault operates through a <strong>hidden REST API</strong>,
+        but all internal documentation has been purged after a security audit.
+        The API base URL and authentication method were found in the server logs during SSH exploration:
+    </p>
+    <div class="nx-terminal" style="margin:1rem 0;">
+        <div class="nx-terminal-header">
+            <span class="nx-terminal-dot nx-terminal-dot--red"></span>
+            <span class="nx-terminal-dot nx-terminal-dot--yellow"></span>
+            <span class="nx-terminal-dot nx-terminal-dot--green"></span>
+            <span class="nx-terminal-title">extracted from /var/log/nexus-app.log</span>
+        </div>
+        <div class="nx-terminal-body">
+<pre style="color:var(--nx-green);">[2024-03-15 08:00:12] INFO: Vault API listening → /level/6/vault-api/
+[2024-03-15 08:00:13] INFO: Auth method: X-Vault-Token header required
+[2024-03-15 14:22:10] INFO: vault_svc authenticated — clearance_level=5</pre>
+        </div>
+    </div>
+    <p>
+        Your mission: use <strong>WFUZZ</strong> to discover the API's hidden endpoints and
+        locate the classified CEO documents. A partial list of NEXUS Corp internal API endpoint
+        names was recovered from a deleted configuration backup —
+        <a href="/level/6/api-wordlist.txt" target="_blank" style="color:var(--nx-accent);">download the wordlist here</a>.
     </p>
 </div>
 
-<!-- Vault hash reference -->
+<!-- WFUZZ Command Reference -->
 <div class="nx-card nx-card--red">
-    <h3 class="nx-card-title">vault_svc Hash (from LDAP)</h3>
+    <h3 class="nx-card-title">WFUZZ Attack Briefing</h3>
     <div class="nx-terminal">
         <div class="nx-terminal-header">
             <span class="nx-terminal-dot nx-terminal-dot--red"></span>
             <span class="nx-terminal-dot nx-terminal-dot--yellow"></span>
             <span class="nx-terminal-dot nx-terminal-dot--green"></span>
-            <span class="nx-terminal-title">target hash</span>
+            <span class="nx-terminal-title">wfuzz reference</span>
         </div>
         <div class="nx-terminal-body">
-<pre style="color: var(--nx-red);">
-uid: vault_svc
-ou: System
-clearance_level: 5
-userPassword (SHA256): Look in your Level 5 LDAP results
+<pre style="color:var(--nx-red);"># ── Phase 1: Discover hidden API endpoints ──────────────────
+wfuzz -w ./api-wordlist.txt --hc 404 \
+  -H "X-Vault-Token: &lt;CRACKED_PASSWORD&gt;" \
+  http://&lt;TARGET&gt;:5000/level/6/vault-api/FUZZ
 
-Crack with:
-  hashcat -m 1400 vault_hash.txt /usr/share/wordlists/rockyou.txt
-  john --format=raw-sha256 vault_hash.txt --wordlist=/usr/share/wordlists/rockyou.txt
-</pre>
+# ── Phase 2: Fuzz parameters on the interesting endpoint ────
+wfuzz -z range,1-??? --hc 404 --hw ??? \
+  -H "X-Vault-Token: &lt;CRACKED_PASSWORD&gt;" \
+  "http://&lt;TARGET&gt;:5000/level/6/vault-api/&lt;ENDPOINT&gt;?doc_id=FUZZ"
+
+# ── Key Flags ───────────────────────────────────────────────
+#   -w &lt;file&gt;        Use a wordlist file
+#   -z range,N-M     Generate numbers from N to M
+#   FUZZ             Placeholder replaced by each payload
+#   --hc CODE        Hide responses with this HTTP status code
+#   --hw WORDS       Hide responses with this word count
+#   --hh CHARS       Hide responses with this char count
+#   -H "Key: Val"    Add custom HTTP header to each request</pre>
         </div>
     </div>
 </div>
 
-<!-- Vault Access -->
+<!-- API Endpoint Tester -->
 <div class="nx-card nx-card--accent" style="margin-top:1.5rem;">
-    <h3 class="nx-card-title">Vault Authentication</h3>
-    <form id="vault-form">
+    <h3 class="nx-card-title">API Endpoint Tester</h3>
+    <p style="font-size:0.82rem; color:var(--nx-text); margin-bottom:1rem;">
+        Manually test individual API endpoints before running WFUZZ.
+    </p>
+    <form id="api-test-form">
         <div class="nx-input-group">
-            <label class="nx-label">Service Account</label>
-            <input type="text" name="username" id="vault-user" class="nx-input" placeholder="username" autocomplete="off">
+            <label class="nx-label">X-Vault-Token</label>
+            <input type="text" name="token" id="api-token" class="nx-input"
+                   placeholder="Cracked vault_svc password" autocomplete="off">
         </div>
         <div class="nx-input-group">
-            <label class="nx-label">Password</label>
-            <input type="password" name="password" id="vault-pass" class="nx-input" placeholder="cracked password" autocomplete="off">
+            <label class="nx-label">Endpoint Path</label>
+            <input type="text" name="path" id="api-path" class="nx-input"
+                   placeholder="e.g. status, health, archives" autocomplete="off">
         </div>
-        <button type="submit" class="nx-btn nx-btn--red">Access Vault</button>
+        <div class="nx-input-group">
+            <label class="nx-label">Query Parameters (optional)</label>
+            <input type="text" name="params" id="api-params" class="nx-input"
+                   placeholder="e.g. doc_id=42" autocomplete="off">
+        </div>
+        <button type="submit" class="nx-btn">Send Request</button>
     </form>
-    <div id="vault-result" class="flag-result" style="margin-top:0.5rem;"></div>
 </div>
 
-<!-- Vault Contents (revealed on success) -->
-<div class="nx-card nx-card--green" id="vault-contents" style="display:none; margin-top:1.5rem;">
-    <h3 class="nx-card-title">Classified Documents</h3>
-    <div id="vault-docs"></div>
+<!-- API Response -->
+<div class="nx-card" id="api-response-card" style="display:none; margin-top:1rem;">
+    <h3 class="nx-card-title">API Response</h3>
+    <div class="nx-terminal">
+        <div class="nx-terminal-header">
+            <span class="nx-terminal-dot nx-terminal-dot--red"></span>
+            <span class="nx-terminal-dot nx-terminal-dot--yellow"></span>
+            <span class="nx-terminal-dot nx-terminal-dot--green"></span>
+            <span class="nx-terminal-title" id="api-response-title">response</span>
+        </div>
+        <div class="nx-terminal-body" id="api-response-output" style="max-height:500px;"></div>
+    </div>
 </div>
 
 <!-- Hints -->
@@ -90,48 +134,35 @@ Crack with:
 
 {% block extra_js %}
 <script>
-document.getElementById("vault-form").addEventListener("submit", async (e) => {
+document.getElementById("api-test-form").addEventListener("submit", async (e) => {
     e.preventDefault();
-    const result = document.getElementById("vault-result");
-    const data = new FormData();
-    data.set("username", document.getElementById("vault-user").value);
-    data.set("password", document.getElementById("vault-pass").value);
+    const token = document.getElementById("api-token").value;
+    const path = document.getElementById("api-path").value.replace(/^\/+/, "");
+    const params = document.getElementById("api-params").value;
+    const output = document.getElementById("api-response-output");
+    const card = document.getElementById("api-response-card");
+    const title = document.getElementById("api-response-title");
+
+    let url = `/level/6/vault-api/${path}`;
+    if (params) url += `?${params}`;
 
     try {
-        const res = await fetch("/level/6/vault-access", { method: "POST", body: data });
+        const res = await fetch(url, {
+            headers: { "X-Vault-Token": token }
+        });
         const json = await res.json();
+        card.style.display = "block";
+        title.textContent = `HTTP ${res.status} — /level/6/vault-api/${path}${params ? '?' + params : ''}`;
 
-        if (json.success) {
-            result.textContent = json.message;
-            result.className = "flag-result flag-result--success";
-            result.style.display = "block";
+        const color = res.status === 200 ? "var(--nx-green)" :
+                      res.status === 403 ? "var(--nx-red)" :
+                      res.status === 401 ? "var(--nx-red)" : "var(--nx-text)";
 
-            // Show vault documents
-            const docsContainer = document.getElementById("vault-docs");
-            const vaultCard = document.getElementById("vault-contents");
-            vaultCard.style.display = "block";
-
-            json.documents.forEach(doc => {
-                const div = document.createElement("div");
-                div.style.cssText = "padding:0.8rem; margin-bottom:0.5rem; background:rgba(0,255,136,0.04); border:1px solid var(--nx-green-dim); border-radius:var(--nx-radius);";
-                div.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; margin-bottom:0.3rem;">
-                        <span style="font-family:var(--nx-font-mono); font-size:0.8rem; color:var(--nx-text-bright);">${doc.document_name}</span>
-                        <span style="font-family:var(--nx-font-mono); font-size:0.7rem; color:var(--nx-red);">${doc.classification}</span>
-                    </div>
-                    <p style="font-size:0.82rem; color:var(--nx-text); line-height:1.5;">${doc.content}</p>
-                `;
-                docsContainer.appendChild(div);
-            });
-        } else {
-            result.textContent = json.message;
-            result.className = "flag-result flag-result--error";
-            result.style.display = "block";
-        }
+        output.innerHTML = `<pre style="color:${color};">${JSON.stringify(json, null, 2)}</pre>`;
     } catch {
-        result.textContent = "Vault service unreachable.";
-        result.className = "flag-result flag-result--error";
-        result.style.display = "block";
+        card.style.display = "block";
+        title.textContent = "Error";
+        output.innerHTML = `<pre style="color:var(--nx-red);">Connection to Vault API failed.</pre>`;
     }
 });
 </script>

@@ -46,14 +46,17 @@ _rate_store: dict[str, list[float]] = {}
 RATE_LIMIT = int(os.environ.get("RATE_LIMIT", 60))       # requests
 RATE_WINDOW = int(os.environ.get("RATE_WINDOW", 60))      # seconds
 
-def rate_limited():
+RATE_LIMIT_FUZZ = int(os.environ.get("RATE_LIMIT_FUZZ", 300))
+
+def rate_limited(limit=None):
     """Return True if the caller should be throttled."""
+    if limit is None:
+        limit = RATE_LIMIT
     ip = request.remote_addr or "unknown"
     now = time.time()
     hits = _rate_store.setdefault(ip, [])
-    # prune old entries
     hits[:] = [t for t in hits if now - t < RATE_WINDOW]
-    if len(hits) >= RATE_LIMIT:
+    if len(hits) >= limit:
         return True
     hits.append(now)
     return False
@@ -95,7 +98,7 @@ FLAGS = {
     3: "NEXUS{h4sh_cr4ck3d_w1d3_0p3n_6e1a}",
     4: "NEXUS{ssh_tun3l_r4t_1n_th3_w4lls_2c8f}",
     5: "NEXUS{ld4p_3num3r4t10n_pr0_5d7b}",
-    6: "NEXUS{c30_v4ult_br34ch3d_g4m3_0v3r_1x9z}",
+    6: "NEXUS{fuzz_th3_v4ult_ap1_d1sc0v3r3d_8k2m}",
 }
 
 # ---------------------------------------------------------------------------
@@ -310,7 +313,8 @@ def init_databases():
 
 @app.before_request
 def before_request_handler():
-    if rate_limited():
+    limit = RATE_LIMIT_FUZZ if request.path.startswith("/level/6/vault-api") else RATE_LIMIT
+    if rate_limited(limit):
         return jsonify({"error": "Rate limit exceeded. Try again shortly."}), 429
 
     # Log attack-relevant requests
@@ -913,13 +917,68 @@ def level5_ldap():
         "num_results": len(results),
         "results": results,
         "flag": FLAGS[5] if len(results) > 0 and auth_method == "admin" else None,
-        "hint": "Find vault_svc password hash and crack it for the final level." if auth_method == "admin" else None
+        "hint": "Crack vault_svc's hash. The CEO Vault runs a hidden API — you'll need to fuzz it." if auth_method == "admin" else None
     })
 
 
 # ---------------------------------------------------------------------------
-# LEVEL 6 – CEO Vault
+# LEVEL 6 – Vault API Fuzzing (WFUZZ)
 # ---------------------------------------------------------------------------
+
+VAULT_API_TOKEN = "V4ult_M4st3r_K3y!"
+
+VAULT_API_WORDLIST = [
+    "status", "health", "config", "logs", "backup", "archives",
+    "users", "admin", "auth", "login", "register", "docs", "files",
+    "search", "upload", "download", "api", "v1", "v2", "internal",
+    "external", "public", "private", "secret", "keys", "tokens",
+    "sessions", "audit", "reports", "dashboard", "metrics", "analytics",
+    "alerts", "notifications", "settings", "preferences", "profiles",
+    "accounts", "permissions", "roles", "groups", "teams", "projects",
+    "tasks", "resources", "assets", "images", "media", "storage",
+    "cache", "queue", "jobs", "workers", "nodes", "clusters",
+    "databases", "tables", "schemas", "migrations", "backups", "restore",
+    "sync", "export", "import", "debug", "test", "ping", "info",
+    "version", "help", "readme", "changelog", "license", "about",
+    "contact", "support", "feedback", "monitor", "trace", "deploy",
+    "build", "release", "certs", "secrets", "env", "variables",
+]
+
+VAULT_API_RESPONSES = {
+    "status": (200, {
+        "service": "nexus-vault",
+        "version": "3.2.1",
+        "status": "operational",
+        "node": "vault-01",
+    }),
+    "health": (200, {
+        "status": "healthy",
+        "uptime_hours": 847,
+        "memory_pct": "42%",
+    }),
+    "config": (403, {
+        "error": "Insufficient privileges",
+        "required_role": "root",
+        "your_role": "service_account",
+    }),
+    "logs": (200, {
+        "recent_entries": [
+            {"ts": "2024-03-15T14:22:10Z", "action": "auth_success", "user": "vault_svc"},
+            {"ts": "2024-03-15T09:45:22Z", "action": "access_denied", "user": "anonymous"},
+            {"ts": "2024-03-14T23:11:05Z", "action": "doc_retrieved", "doc_id": 73, "user": "vault_svc"},
+            {"ts": "2024-03-14T18:30:00Z", "action": "backup_completed", "docs_archived": 95},
+        ],
+    }),
+    "backup": (200, {
+        "service": "vault-backup",
+        "last_run": "2024-03-15T03:00:00Z",
+        "status": "completed",
+        "next_run": "2024-03-22T03:00:00Z",
+    }),
+}
+
+VAULT_TARGET_DOC_ID = "73"
+
 
 @app.route("/level/6")
 @team_required
@@ -928,28 +987,79 @@ def level6():
                            solved=6 in get_team_progress(session["team_id"]))
 
 
-@app.route("/level/6/vault-access", methods=["POST"])
-@team_required
-def level6_vault():
-    """
-    Final level. Players must authenticate as vault_svc with the cracked password.
-    """
-    username = request.form.get("username", "")
-    password = request.form.get("password", "")
+@app.route("/level/6/api-wordlist.txt")
+def level6_wordlist():
+    """Downloadable wordlist for Phase 1 directory fuzzing."""
+    content = "\n".join(VAULT_API_WORDLIST) + "\n"
+    return content, 200, {"Content-Type": "text/plain; charset=utf-8"}
 
-    if username == "vault_svc" and password == "V4ult_M4st3r_K3y!":
-        db = get_vuln_db()
-        docs = db.execute("SELECT * FROM ceo_vault").fetchall()
+
+@app.route("/level/6/vault-api/archives")
+def level6_archives():
+    """
+    Archives endpoint — Phase 2 target.
+    Without doc_id: returns metadata hinting at document range.
+    With doc_id=73: returns classified documents + flag.
+    Other doc_ids: returns 'not found' (uniform response for WFUZZ filtering).
+    """
+    token = request.headers.get("X-Vault-Token", "")
+    if token != VAULT_API_TOKEN:
         return jsonify({
-            "success": True,
-            "message": "VAULT ACCESS GRANTED — Clearance Level 5 verified.",
+            "error": "Authentication required",
+            "hint": "X-Vault-Token header missing or invalid",
+        }), 401
+
+    doc_id = request.args.get("doc_id")
+
+    if doc_id is None:
+        return jsonify({
+            "service": "vault-archives",
+            "status": "active",
+            "message": "Specify doc_id parameter to retrieve documents.",
+            "total_classified": 95,
+        })
+
+    if str(doc_id) == VAULT_TARGET_DOC_ID:
+        db = get_vuln_db()
+        docs = db.execute(
+            "SELECT document_name, classification, content FROM ceo_vault"
+        ).fetchall()
+        return jsonify({
+            "access": "GRANTED",
+            "clearance": "TOP SECRET",
+            "vault_svc_verified": True,
             "documents": [dict(d) for d in docs],
+            "message": "CEO Vault breach complete. All classified documents retrieved.",
         })
 
     return jsonify({
-        "success": False,
-        "message": "VAULT ACCESS DENIED — Insufficient clearance."
-    }), 403
+        "error": "Document not found",
+        "doc_id": doc_id,
+        "status": "restricted",
+    })
+
+
+@app.route("/level/6/vault-api/<path:endpoint>")
+def level6_api(endpoint):
+    """
+    Fuzzable vault API catch-all.
+    Only endpoints in VAULT_API_RESPONSES are valid; everything else → 404.
+    Requires X-Vault-Token header (cracked vault_svc password from Level 5).
+    """
+    endpoint = endpoint.strip("/")
+
+    token = request.headers.get("X-Vault-Token", "")
+    if token != VAULT_API_TOKEN:
+        return jsonify({
+            "error": "Authentication required",
+            "hint": "X-Vault-Token header missing or invalid",
+        }), 401
+
+    if endpoint in VAULT_API_RESPONSES:
+        code, body = VAULT_API_RESPONSES[endpoint]
+        return jsonify(body), code
+
+    return jsonify({"error": "Endpoint not found", "code": 404}), 404
 
 
 # ---------------------------------------------------------------------------
@@ -987,9 +1097,11 @@ HINTS = {
         "Focus on vault_svc — it has clearance_level=5.",
     ],
     6: [
-        "Crack the vault_svc password hash from the LDAP directory.",
-        "It's a SHA256 hash. Use hashcat -m 1400 or john with the right format.",
-        "Authenticate to the vault as vault_svc with the cracked password.",
+        "The vault API authenticates via an X-Vault-Token header. Use the cracked vault_svc password.",
+        "Phase 1: wfuzz -w wordlist.txt --hc 404 -H 'X-Vault-Token: ...' http://TARGET/level/6/vault-api/FUZZ",
+        "Look at the 'archives' endpoint response — it tells you how many documents exist.",
+        "Phase 2: Fuzz doc_id with -z range. Use --hw to hide the common 'not found' word count.",
+        "The logs endpoint has a breadcrumb — check which doc_id was recently retrieved.",
     ],
 }
 

@@ -60,7 +60,7 @@ def main():
     print("    - hr_employees    (Level 2 — SQL injection target)")
     print("    - ssh_credentials (Level 2/3 — hidden table with hashes)")
     print("    - ldap_directory  (Level 5 — LDAP enumeration)")
-    print("    - ceo_vault       (Level 6 — final documents)")
+    print("    - ceo_vault       (Level 6 — vault API fuzzing target)")
 
 
 if __name__ == "__main__":
