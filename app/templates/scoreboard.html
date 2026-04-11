@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}NEXUS Corp — Scoreboard{% endblock %}
+
+{% block content %}
+<h1 class="section-title">Scoreboard</h1>
+<p class="section-subtitle">Live infiltration rankings</p>
+
+<div class="nx-card">
+    <table class="nx-table">
+        <thead>
+            <tr>
+                <th style="width:60px;">Rank</th>
+                <th>Team</th>
+                <th style="width:140px;">Levels Cleared</th>
+                <th style="width:180px;">Last Solve</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for team in teams %}
+            <tr>
+                <td>
+                    <span class="score-rank score-rank--{{ loop.index }}">
+                        {% if loop.index == 1 %}⬥{% elif loop.index == 2 %}⬥{% elif loop.index == 3 %}⬥{% else %}{{ loop.index }}{% endif %}
+                    </span>
+                </td>
+                <td style="color:var(--nx-text-bright); font-weight:500;">{{ team.team_name }}</td>
+                <td>
+                    <span style="color:var(--nx-accent); font-family:var(--nx-font-mono);">{{ team.levels_solved }}</span>
+                    <span style="color:var(--nx-text-dim);">/6</span>
+                </td>
+                <td style="font-family:var(--nx-font-mono); font-size:0.75rem; color:var(--nx-text-dim);">
+                    {{ team.last_solve or "—" }}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4" style="text-align:center; color:var(--nx-text-dim); padding:2rem;">
+                    No teams registered yet. Be the first operative.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

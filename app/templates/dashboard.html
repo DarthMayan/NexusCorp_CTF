@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}NEXUS Corp — Operations Dashboard{% endblock %}
+
+{% block content %}
+<h1 class="section-title">Operations Dashboard</h1>
+<p class="section-subtitle">Operative: {{ team_name }} — {{ solved|length }}/{{ total_levels }} sectors breached</p>
+
+<!-- Progress bar -->
+<div style="background:var(--nx-bg-input); border:1px solid var(--nx-border); border-radius:var(--nx-radius); height:8px; margin-bottom:2rem; overflow:hidden;">
+    <div id="dash-progress" data-pct="{{ solved|length * 100 // total_levels }}"
+         style="height:100%; width:0%; background: linear-gradient(90deg, var(--nx-accent), var(--nx-green)); transition: width 0.5s;"></div>
+</div>
+
+<div class="level-grid">
+    <!-- Level 1 -->
+    <a href="{{ url_for('level1') }}" class="level-card {% if 1 in solved %}level-card--solved{% endif %}">
+        <span class="level-number">01</span>
+        <span class="level-badge {% if 1 in solved %}level-badge--solved{% else %}level-badge--active{% endif %}">
+            {% if 1 in solved %}Cleared{% else %}Active{% endif %}
+        </span>
+        <h3 class="level-card-title">Employee Portal</h3>
+        <p class="level-card-desc">Breach the public-facing employee login. Weak credentials are rumored to exist.</p>
+        <div class="level-card-tools">
+            <span class="tool-tag">Hydra</span>
+            <span class="tool-tag">Medusa</span>
+            <span class="tool-tag">Brute-force</span>
+        </div>
+    </a>
+
+    <!-- Level 2 -->
+    <a href="{% if 1 in solved %}{{ url_for('level2') }}{% else %}#{% endif %}"
+       class="level-card {% if 2 in solved %}level-card--solved{% elif 1 not in solved %}level-card--locked{% endif %}">
+        <span class="level-number">02</span>
+        <span class="level-badge {% if 2 in solved %}level-badge--solved{% elif 1 in solved %}level-badge--active{% else %}level-badge--locked{% endif %}">
+            {% if 2 in solved %}Cleared{% elif 1 in solved %}Active{% else %}Locked{% endif %}
+        </span>
+        <h3 class="level-card-title">HR Database</h3>
+        <p class="level-card-desc">The internal HR system has a search function. It doesn't look very secure...</p>
+        <div class="level-card-tools">
+            <span class="tool-tag">SQLi</span>
+            <span class="tool-tag">sqlmap</span>
+        </div>
+    </a>
+
+    <!-- Level 3 -->
+    <a href="{% if 2 in solved %}{{ url_for('level3') }}{% else %}#{% endif %}"
+       class="level-card {% if 3 in solved %}level-card--solved{% elif 2 not in solved %}level-card--locked{% endif %}">
+        <span class="level-number">03</span>
+        <span class="level-badge {% if 3 in solved %}level-badge--solved{% elif 2 in solved %}level-badge--active{% else %}level-badge--locked{% endif %}">
+            {% if 3 in solved %}Cleared{% elif 2 in solved %}Active{% else %}Locked{% endif %}
+        </span>
+        <h3 class="level-card-title">Hash Cracking</h3>
+        <p class="level-card-desc">You found password hashes in a hidden table. Time to crack them.</p>
+        <div class="level-card-tools">
+            <span class="tool-tag">Hashcat</span>
+            <span class="tool-tag">John</span>
+            <span class="tool-tag">MD5/SHA256</span>
+        </div>
+    </a>
+
+    <!-- Level 4 -->
+    <a href="{% if 3 in solved %}{{ url_for('level4') }}{% else %}#{% endif %}"
+       class="level-card {% if 4 in solved %}level-card--solved{% elif 3 not in solved %}level-card--locked{% endif %}">
+        <span class="level-number">04</span>
+        <span class="level-badge {% if 4 in solved %}level-badge--solved{% elif 3 in solved %}level-badge--active{% else %}level-badge--locked{% endif %}">
+            {% if 4 in solved %}Cleared{% elif 3 in solved %}Active{% else %}Locked{% endif %}
+        </span>
+        <h3 class="level-card-title">SSH Infiltration</h3>
+        <p class="level-card-desc">With cracked credentials, access the internal server and explore the filesystem.</p>
+        <div class="level-card-tools">
+            <span class="tool-tag">SSH</span>
+            <span class="tool-tag">Enumeration</span>
+        </div>
+    </a>
+
+    <!-- Level 5 -->
+    <a href="{% if 4 in solved %}{{ url_for('level5') }}{% else %}#{% endif %}"
+       class="level-card {% if 5 in solved %}level-card--solved{% elif 4 not in solved %}level-card--locked{% endif %}">
+        <span class="level-number">05</span>
+        <span class="level-badge {% if 5 in solved %}level-badge--solved{% elif 4 in solved %}level-badge--active{% else %}level-badge--locked{% endif %}">
+            {% if 5 in solved %}Cleared{% elif 4 in solved %}Active{% else %}Locked{% endif %}
+        </span>
+        <h3 class="level-card-title">LDAP Enumeration</h3>
+        <p class="level-card-desc">The LDAP directory has anonymous bind enabled. Enumerate it to find the vault credentials.</p>
+        <div class="level-card-tools">
+            <span class="tool-tag">LDAP</span>
+            <span class="tool-tag">Directory</span>
+        </div>
+    </a>
+
+    <!-- Level 6 -->
+    <a href="{% if 5 in solved %}{{ url_for('level6') }}{% else %}#{% endif %}"
+       class="level-card {% if 6 in solved %}level-card--solved{% elif 5 not in solved %}level-card--locked{% endif %}">
+        <span class="level-number">06</span>
+        <span class="level-badge {% if 6 in solved %}level-badge--solved{% elif 5 in solved %}level-badge--active{% else %}level-badge--locked{% endif %}">
+            {% if 6 in solved %}Cleared{% elif 5 in solved %}Active{% else %}Locked{% endif %}
+        </span>
+        <h3 class="level-card-title">CEO Vault</h3>
+        <p class="level-card-desc">The final layer. Access the CEO's classified vault and expose the truth.</p>
+        <div class="level-card-tools">
+            <span class="tool-tag">Final Boss</span>
+            <span class="tool-tag">Hash Crack</span>
+        </div>
+    </a>
+</div>
+
+<!-- Flag submission -->
+<div class="nx-card nx-card--accent" style="margin-top:2rem;">
+    <h3 class="nx-card-title">Submit Flag</h3>
+    <form class="flag-form flag-submit">
+        <div class="nx-input-group" style="margin:0; flex:0 0 80px;">
+            <label class="nx-label">Level</label>
+            <select name="level" class="nx-input" style="width:80px;">
+                {% for i in range(1, total_levels + 1) %}
+                <option value="{{ i }}" {% if i not in solved and (loop.first or (i-1) in solved) %}selected{% endif %}>{{ i }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="nx-input-group" style="margin:0; flex:1;">
+            <label class="nx-label">Flag</label>
+            <input type="text" name="flag" class="nx-input" placeholder="NEXUS{...}" required>
+        </div>
+        <button type="submit" class="nx-btn nx-btn--green" style="margin-bottom:0;">Submit</button>
+    </form>
+    <div class="flag-result"></div>
+</div>
+{% endblock %}

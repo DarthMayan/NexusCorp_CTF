@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Level 2 — HR Database{% endblock %}
+
+{% block content %}
+<span class="level-badge {% if solved %}level-badge--solved{% else %}level-badge--active{% endif %}">
+    Level 02 {% if solved %}— Cleared{% endif %}
+</span>
+<h1 class="section-title">HR Database</h1>
+<p class="section-subtitle">Internal Employee Records System</p>
+
+<div class="briefing">
+    <p>
+        You've breached the portal. Now you're inside the <strong>HR employee records system</strong>.
+        The search function queries the database directly. It looks like the developers forgot to sanitize input...
+    </p>
+    <p>
+        Search endpoint: <code>POST /level/2/search</code> with field <code>search</code>.
+        Also accessible via <code>GET /level/2/search?search=VALUE</code> for sqlmap compatibility.
+    </p>
+    <p>
+        <strong>Objective:</strong> Enumerate the database. There are hidden tables with sensitive credentials.
+        Find the <code>ssh_credentials</code> table and extract the password hashes.
+    </p>
+</div>
+
+<!-- Search form (vulnerable) -->
+<div class="nx-card nx-card--accent">
+    <h3 class="nx-card-title">Employee Search</h3>
+    <form id="level2-form" method="POST" action="{{ url_for('level2_search') }}">
+        <div class="nx-input-group">
+            <label class="nx-label">Search by name or department</label>
+            <div style="display:flex; gap:0.5rem;">
+                <input type="text" name="search" class="nx-input" value="{{ query or '' }}" placeholder="e.g. Engineering" autocomplete="off">
+                <button type="submit" class="nx-btn">Search</button>
+            </div>
+        </div>
+    </form>
+
+    {% if error %}
+    <div style="margin-top:1rem; padding:0.6rem; background:rgba(255,45,85,0.08); border:1px solid var(--nx-red-dim); border-radius:var(--nx-radius);">
+        <span style="font-family:var(--nx-font-mono); font-size:0.8rem; color:var(--nx-red);">SQL Error: {{ error }}</span>
+    </div>
+    {% endif %}
+
+    {% if results %}
+    <table class="nx-table">
+        <thead>
+            <tr>
+                {% for key in results[0].keys() %}
+                <th>{{ key }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in results %}
+            <tr>
+                {% for val in row.values() %}
+                <td>{{ val }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <p style="font-family:var(--nx-font-mono); font-size:0.75rem; color:var(--nx-text-dim); margin-top:0.5rem;">
+        {{ results|length }} record(s) found
+    </p>
+    {% elif query and not error %}
+    <p style="font-family:var(--nx-font-mono); font-size:0.8rem; color:var(--nx-text-dim); margin-top:1rem;">
+        No records found for "{{ query }}"
+    </p>
+    {% endif %}
+</div>
+
+<!-- Hints -->
+<div class="hint-box">
+    <button class="nx-btn nx-btn--red hint-btn" data-level="2" data-hint-num="0">Request Intel</button>
+    <div class="hint-text"></div>
+</div>
+
+{% if not solved %}
+<div class="nx-card" style="margin-top:1.5rem;">
+    <h3 class="nx-card-title">Submit Level 2 Flag</h3>
+    <p style="font-size:0.82rem; color:var(--nx-text-dim); margin-bottom:1rem;">
+        Once you've discovered the hidden tables and extracted the data, submit the flag.
+        The flag is revealed when you successfully enumerate all tables using SQL injection.
+    </p>
+    <form class="flag-form flag-submit">
+        <input type="hidden" name="level" value="2">
+        <input type="text" name="flag" class="nx-input" placeholder="NEXUS{...}" required>
+        <button type="submit" class="nx-btn nx-btn--green">Submit</button>
+    </form>
+    <div class="flag-result"></div>
+</div>
+{% endif %}
+{% endblock %}

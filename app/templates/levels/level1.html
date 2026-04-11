@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Level 1 — Employee Portal{% endblock %}
+
+{% block content %}
+<span class="level-badge {% if solved %}level-badge--solved{% else %}level-badge--active{% endif %}">
+    Level 01 {% if solved %}— Cleared{% endif %}
+</span>
+<h1 class="section-title">Employee Portal</h1>
+<p class="section-subtitle">NEXUS Corp Public Employee Access</p>
+
+<div class="briefing">
+    <p>
+        NEXUS Corp's employee portal is the first line of defense. Intelligence suggests that some employees
+        are using <strong>extremely weak passwords</strong>. Your objective: gain <strong>Administrator</strong> access.
+    </p>
+    <p>
+        The login endpoint accepts POST requests at <code>/level/1/login</code> with fields
+        <code>username</code> and <code>password</code>. Failed logins return HTTP 401.
+        Successful admin login reveals the flag.
+    </p>
+</div>
+
+<!-- The actual vulnerable login form -->
+<div class="nx-card nx-card--accent" style="max-width:500px;">
+    <h3 class="nx-card-title">NEXUS Employee Login</h3>
+    <form id="level1-form">
+        <div class="nx-input-group">
+            <label class="nx-label">Username</label>
+            <input type="text" name="username" id="l1-user" class="nx-input" placeholder="employee ID" autocomplete="off">
+        </div>
+        <div class="nx-input-group">
+            <label class="nx-label">Password</label>
+            <input type="password" name="password" id="l1-pass" class="nx-input" placeholder="••••••••" autocomplete="off">
+        </div>
+        <button type="submit" class="nx-btn">Authenticate</button>
+    </form>
+    <div id="l1-result" class="flag-result" style="margin-top:1rem;"></div>
+</div>
+
+<!-- Hints -->
+<div class="hint-box">
+    <button class="nx-btn nx-btn--red hint-btn" data-level="1" data-hint-num="0">Request Intel</button>
+    <div class="hint-text"></div>
+</div>
+
+<!-- Flag submission -->
+{% if not solved %}
+<div class="nx-card" style="margin-top:1.5rem;">
+    <h3 class="nx-card-title">Submit Level 1 Flag</h3>
+    <form class="flag-form flag-submit">
+        <input type="hidden" name="level" value="1">
+        <input type="text" name="flag" class="nx-input" placeholder="NEXUS{...}" required>
+        <button type="submit" class="nx-btn nx-btn--green">Submit</button>
+    </form>
+    <div class="flag-result"></div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById("level1-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const result = document.getElementById("l1-result");
+    const user = document.getElementById("l1-user").value;
+    const pass = document.getElementById("l1-pass").value;
+
+    const data = new FormData();
+    data.set("username", user);
+    data.set("password", pass);
+
+    try {
+        const res = await fetch("/level/1/login", { method: "POST", body: data });
+        const json = await res.json();
+        result.textContent = json.message + (json.flag ? "\n\nFLAG: " + json.flag : "") + (json.hint ? "\n\n" + json.hint : "");
+        result.className = "flag-result " + (json.success ? "flag-result--success" : "flag-result--error");
+        result.style.display = "block";
+    } catch {
+        result.textContent = "Connection error.";
+        result.className = "flag-result flag-result--error";
+        result.style.display = "block";
+    }
+});
+</script>
+{% endblock %}

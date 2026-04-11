@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Level 4 — SSH Infiltration{% endblock %}
+
+{% block content %}
+<span class="level-badge {% if solved %}level-badge--solved{% else %}level-badge--active{% endif %}">
+    Level 04 {% if solved %}— Cleared{% endif %}
+</span>
+<h1 class="section-title">SSH Infiltration</h1>
+<p class="section-subtitle">nexus-internal-srv — Remote Access</p>
+
+<div class="briefing">
+    <p>
+        You cracked the sysop password. Now connect to <strong>nexus-internal-srv</strong> via SSH
+        and explore the filesystem. Look for configuration files, logs, and anything related to
+        the <strong>LDAP directory</strong> and the <strong>CEO vault</strong>.
+    </p>
+    <p>
+        The flag is hidden somewhere in the filesystem. Explore carefully with
+        <code>ls</code>, <code>cat</code>, <code>find</code>, and <code>grep</code>.
+    </p>
+</div>
+
+<!-- SSH Login -->
+<div class="nx-card nx-card--accent" id="ssh-login-card">
+    <h3 class="nx-card-title">SSH Connection</h3>
+    <form id="ssh-login-form">
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+            <div class="nx-input-group" style="flex:1; min-width:150px;">
+                <label class="nx-label">Username</label>
+                <input type="text" name="username" id="ssh-user" class="nx-input" placeholder="username" autocomplete="off">
+            </div>
+            <div class="nx-input-group" style="flex:1; min-width:150px;">
+                <label class="nx-label">Password</label>
+                <input type="password" name="password" id="ssh-pass" class="nx-input" placeholder="password" autocomplete="off">
+            </div>
+            <div style="display:flex; align-items:flex-end;">
+                <button type="submit" class="nx-btn">Connect</button>
+            </div>
+        </div>
+    </form>
+    <div id="ssh-login-result" class="flag-result" style="margin-top:0.5rem;"></div>
+</div>
+
+<!-- SSH Terminal -->
+<div class="nx-card" id="ssh-terminal-card" style="display:none; margin-top:1rem;">
+    <div class="nx-terminal" style="max-height:none;">
+        <div class="nx-terminal-header">
+            <span class="nx-terminal-dot nx-terminal-dot--red"></span>
+            <span class="nx-terminal-dot nx-terminal-dot--yellow"></span>
+            <span class="nx-terminal-dot nx-terminal-dot--green"></span>
+            <span class="nx-terminal-title">sysop@nexus-internal-srv — SSH Session</span>
+        </div>
+        <div class="nx-terminal-body" id="ssh-terminal-body" style="min-height:300px; max-height:500px;">
+        </div>
+        <div class="nx-terminal-input-line">
+            <span class="nx-terminal-prompt">sysop@nexus-internal-srv:~$</span>
+            <input type="text" id="ssh-cmd-input" class="nx-terminal-input" placeholder="Type a command..." autocomplete="off" autofocus>
+        </div>
+    </div>
+    <p style="font-family:var(--nx-font-mono); font-size:0.7rem; color:var(--nx-text-dim); margin-top:0.5rem;">
+        Available commands: ls, cat, pwd, whoami, id, uname, find, grep, help, clear, exit
+    </p>
+</div>
+
+<!-- Hints -->
+<div class="hint-box">
+    <button class="nx-btn nx-btn--red hint-btn" data-level="4" data-hint-num="0">Request Intel</button>
+    <div class="hint-text"></div>
+</div>
+
+{% if not solved %}
+<div class="nx-card" style="margin-top:1.5rem;">
+    <h3 class="nx-card-title">Submit Level 4 Flag</h3>
+    <form class="flag-form flag-submit">
+        <input type="hidden" name="level" value="4">
+        <input type="text" name="flag" class="nx-input" placeholder="NEXUS{...}" required>
+        <button type="submit" class="nx-btn nx-btn--green">Submit</button>
+    </form>
+    <div class="flag-result"></div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById("ssh-login-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const result = document.getElementById("ssh-login-result");
+    const data = new FormData();
+    data.set("username", document.getElementById("ssh-user").value);
+    data.set("password", document.getElementById("ssh-pass").value);
+
+    try {
+        const res = await fetch("/level/4/ssh", { method: "POST", body: data });
+        const json = await res.json();
+
+        if (json.success) {
+            document.getElementById("ssh-login-card").style.display = "none";
+            document.getElementById("ssh-terminal-card").style.display = "block";
+            const body = document.getElementById("ssh-terminal-body");
+            const pre = document.createElement("pre");
+            pre.textContent = json.message;
+            pre.style.color = "#00ff88";
+            pre.style.margin = "0";
+            body.appendChild(pre);
+            document.getElementById("ssh-cmd-input").focus();
+        } else {
+            result.textContent = json.message;
+            result.className = "flag-result flag-result--error";
+            result.style.display = "block";
+        }
+    } catch {
+        result.textContent = "Connection refused.";
+        result.className = "flag-result flag-result--error";
+        result.style.display = "block";
+    }
+});
+</script>
+{% endblock %}

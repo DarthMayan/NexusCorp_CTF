@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}Level 6 — CEO Vault{% endblock %}
+
+{% block content %}
+<span class="level-badge {% if solved %}level-badge--solved{% else %}level-badge--active{% endif %}">
+    Level 06 {% if solved %}— Cleared{% endif %}
+</span>
+<h1 class="section-title">CEO Vault</h1>
+<p class="section-subtitle">Top Secret — Clearance Level 5 Required</p>
+
+<div class="briefing">
+    <p>
+        This is it. The <strong>CEO Vault</strong> contains classified documents proving NEXUS Corp's
+        illegal operations. Only the <strong>vault_svc</strong> service account with
+        <strong>clearance_level 5</strong> can access it.
+    </p>
+    <p>
+        You found vault_svc's SHA256 password hash in the LDAP directory (Level 5).
+        Crack it with <code>hashcat -m 1400</code> or <code>john --format=raw-sha256</code>,
+        then authenticate below.
+    </p>
+</div>
+
+<!-- Vault hash reference -->
+<div class="nx-card nx-card--red">
+    <h3 class="nx-card-title">vault_svc Hash (from LDAP)</h3>
+    <div class="nx-terminal">
+        <div class="nx-terminal-header">
+            <span class="nx-terminal-dot nx-terminal-dot--red"></span>
+            <span class="nx-terminal-dot nx-terminal-dot--yellow"></span>
+            <span class="nx-terminal-dot nx-terminal-dot--green"></span>
+            <span class="nx-terminal-title">target hash</span>
+        </div>
+        <div class="nx-terminal-body">
+<pre style="color: var(--nx-red);">
+uid: vault_svc
+ou: System
+clearance_level: 5
+userPassword (SHA256): Look in your Level 5 LDAP results
+
+Crack with:
+  hashcat -m 1400 vault_hash.txt /usr/share/wordlists/rockyou.txt
+  john --format=raw-sha256 vault_hash.txt --wordlist=/usr/share/wordlists/rockyou.txt
+</pre>
+        </div>
+    </div>
+</div>
+
+<!-- Vault Access -->
+<div class="nx-card nx-card--accent" style="margin-top:1.5rem;">
+    <h3 class="nx-card-title">Vault Authentication</h3>
+    <form id="vault-form">
+        <div class="nx-input-group">
+            <label class="nx-label">Service Account</label>
+            <input type="text" name="username" id="vault-user" class="nx-input" placeholder="username" autocomplete="off">
+        </div>
+        <div class="nx-input-group">
+            <label class="nx-label">Password</label>
+            <input type="password" name="password" id="vault-pass" class="nx-input" placeholder="cracked password" autocomplete="off">
+        </div>
+        <button type="submit" class="nx-btn nx-btn--red">Access Vault</button>
+    </form>
+    <div id="vault-result" class="flag-result" style="margin-top:0.5rem;"></div>
+</div>
+
+<!-- Vault Contents (revealed on success) -->
+<div class="nx-card nx-card--green" id="vault-contents" style="display:none; margin-top:1.5rem;">
+    <h3 class="nx-card-title">Classified Documents</h3>
+    <div id="vault-docs"></div>
+</div>
+
+<!-- Hints -->
+<div class="hint-box">
+    <button class="nx-btn nx-btn--red hint-btn" data-level="6" data-hint-num="0">Request Intel</button>
+    <div class="hint-text"></div>
+</div>
+
+{% if not solved %}
+<div class="nx-card" style="margin-top:1.5rem;">
+    <h3 class="nx-card-title">Submit Final Flag</h3>
+    <form class="flag-form flag-submit">
+        <input type="hidden" name="level" value="6">
+        <input type="text" name="flag" class="nx-input" placeholder="NEXUS{...}" required>
+        <button type="submit" class="nx-btn nx-btn--green">Submit</button>
+    </form>
+    <div class="flag-result"></div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById("vault-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const result = document.getElementById("vault-result");
+    const data = new FormData();
+    data.set("username", document.getElementById("vault-user").value);
+    data.set("password", document.getElementById("vault-pass").value);
+
+    try {
+        const res = await fetch("/level/6/vault-access", { method: "POST", body: data });
+        const json = await res.json();
+
+        if (json.success) {
+            result.textContent = json.message;
+            result.className = "flag-result flag-result--success";
+            result.style.display = "block";
+
+            // Show vault documents
+            const docsContainer = document.getElementById("vault-docs");
+            const vaultCard = document.getElementById("vault-contents");
+            vaultCard.style.display = "block";
+
+            json.documents.forEach(doc => {
+                const div = document.createElement("div");
+                div.style.cssText = "padding:0.8rem; margin-bottom:0.5rem; background:rgba(0,255,136,0.04); border:1px solid var(--nx-green-dim); border-radius:var(--nx-radius);";
+                div.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; margin-bottom:0.3rem;">
+                        <span style="font-family:var(--nx-font-mono); font-size:0.8rem; color:var(--nx-text-bright);">${doc.document_name}</span>
+                        <span style="font-family:var(--nx-font-mono); font-size:0.7rem; color:var(--nx-red);">${doc.classification}</span>
+                    </div>
+                    <p style="font-size:0.82rem; color:var(--nx-text); line-height:1.5;">${doc.content}</p>
+                `;
+                docsContainer.appendChild(div);
+            });
+        } else {
+            result.textContent = json.message;
+            result.className = "flag-result flag-result--error";
+            result.style.display = "block";
+        }
+    } catch {
+        result.textContent = "Vault service unreachable.";
+        result.className = "flag-result flag-result--error";
+        result.style.display = "block";
+    }
+});
+</script>
+{% endblock %}

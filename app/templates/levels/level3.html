@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Level 3 — Hash Cracking{% endblock %}
+
+{% block content %}
+<span class="level-badge {% if solved %}level-badge--solved{% else %}level-badge--active{% endif %}">
+    Level 03 {% if solved %}— Cleared{% endif %}
+</span>
+<h1 class="section-title">Hash Cracking</h1>
+<p class="section-subtitle">Crack the SSH credentials</p>
+
+<div class="briefing">
+    <p>
+        From the SQL injection in Level 2, you discovered the <code>ssh_credentials</code> table
+        containing password hashes for internal servers. Your target is the <strong>sysop</strong>
+        account on <strong>nexus-internal-srv</strong>.
+    </p>
+    <p>
+        The hash for sysop is an <strong>MD5</strong> hash (32 hex characters).
+        Use <code>hashcat</code> or <code>John the Ripper</code> with a wordlist to crack it.
+    </p>
+</div>
+
+<!-- Hash reference -->
+<div class="nx-card nx-card--accent">
+    <h3 class="nx-card-title">Recovered Hashes</h3>
+    <div class="nx-terminal">
+        <div class="nx-terminal-header">
+            <span class="nx-terminal-dot nx-terminal-dot--red"></span>
+            <span class="nx-terminal-dot nx-terminal-dot--yellow"></span>
+            <span class="nx-terminal-dot nx-terminal-dot--green"></span>
+            <span class="nx-terminal-title">ssh_credentials — extracted via SQLi</span>
+        </div>
+        <div class="nx-terminal-body">
+<pre>
++----+---------------------+----------+----------------------------------+------------------------------+
+| id | hostname            | username | password_hash                    | notes                        |
++----+---------------------+----------+----------------------------------+------------------------------+
+| 1  | nexus-internal-srv  | sysop    | 5b09b6e080c821e463c2b48bc81540f3 | Main server – DO NOT SHARE   |
+| 2  | nexus-backup-srv    | backup   | a67c4d15c47b4899e4a71024acf4aaa2 | Nightly backup account       |
+| 3  | nexus-dev-srv       | devops   | (SHA256 — 64 chars)              | CI/CD pipeline               |
++----+---------------------+----------+----------------------------------+------------------------------+
+
+Target: Crack the sysop MD5 hash
+Tool suggestion: hashcat -m 0 hash.txt wordlist.txt
+            or: john --format=raw-md5 hash.txt --wordlist=wordlist.txt
+</pre>
+        </div>
+    </div>
+</div>
+
+<!-- Password verification -->
+<div class="nx-card" style="margin-top:1.5rem;">
+    <h3 class="nx-card-title">Verify Cracked Password</h3>
+    <form id="level3-form">
+        <div class="nx-input-group">
+            <label class="nx-label">Cracked password for sysop</label>
+            <div style="display:flex; gap:0.5rem;">
+                <input type="text" name="password" id="l3-pass" class="nx-input" placeholder="Enter cracked password..." autocomplete="off">
+                <button type="submit" class="nx-btn">Verify</button>
+            </div>
+        </div>
+    </form>
+    <div id="l3-result" class="flag-result" style="margin-top:0.5rem;"></div>
+</div>
+
+<!-- Hints -->
+<div class="hint-box">
+    <button class="nx-btn nx-btn--red hint-btn" data-level="3" data-hint-num="0">Request Intel</button>
+    <div class="hint-text"></div>
+</div>
+
+{% if not solved %}
+<div class="nx-card" style="margin-top:1.5rem;">
+    <h3 class="nx-card-title">Submit Level 3 Flag</h3>
+    <form class="flag-form flag-submit">
+        <input type="hidden" name="level" value="3">
+        <input type="text" name="flag" class="nx-input" placeholder="NEXUS{...}" required>
+        <button type="submit" class="nx-btn nx-btn--green">Submit</button>
+    </form>
+    <div class="flag-result"></div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById("level3-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const result = document.getElementById("l3-result");
+    const data = new FormData();
+    data.set("password", document.getElementById("l3-pass").value);
+
+    try {
+        const res = await fetch("/level/3/verify", { method: "POST", body: data });
+        const json = await res.json();
+        result.textContent = json.message + (json.flag ? "\n\nFLAG: " + json.flag : "") + (json.hint ? "\n" + json.hint : "");
+        result.className = "flag-result " + (json.success ? "flag-result--success" : "flag-result--error");
+        result.style.display = "block";
+    } catch {
+        result.textContent = "Connection error.";
+        result.className = "flag-result flag-result--error";
+        result.style.display = "block";
+    }
+});
+</script>
+{% endblock %}

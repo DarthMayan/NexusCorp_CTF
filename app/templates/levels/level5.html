@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}Level 5 — LDAP Enumeration{% endblock %}
+
+{% block content %}
+<span class="level-badge {% if solved %}level-badge--solved{% else %}level-badge--active{% endif %}">
+    Level 05 {% if solved %}— Cleared{% endif %}
+</span>
+<h1 class="section-title">LDAP Enumeration</h1>
+<p class="section-subtitle">nexus-ldap-srv — Directory Service</p>
+
+<div class="briefing">
+    <p>
+        From the SSH session, you discovered that the LDAP server has <strong>anonymous bind enabled</strong>.
+        The admin credentials were also found in <code>/etc/nexus/backup.key</code>.
+    </p>
+    <p>
+        Use LDAP queries to enumerate the directory and find the <strong>vault_svc</strong> service account.
+        You need its password hash to access the CEO vault in Level 6.
+    </p>
+    <p>
+        Admin bind DN: <code>cn=admin,dc=nexuscorp,dc=local</code><br>
+        Admin password: found in Level 4 filesystem.
+        Authenticating as admin reveals password hashes and the flag.
+    </p>
+</div>
+
+<!-- LDAP Query Interface -->
+<div class="nx-card nx-card--accent">
+    <h3 class="nx-card-title">LDAP Search Interface</h3>
+    <form id="ldap-form">
+        <div class="nx-input-group">
+            <label class="nx-label">Bind DN (leave empty for anonymous)</label>
+            <input type="text" name="bind_dn" id="ldap-bind-dn" class="nx-input"
+                   placeholder="cn=admin,dc=nexuscorp,dc=local" autocomplete="off">
+        </div>
+        <div class="nx-input-group">
+            <label class="nx-label">Bind Password</label>
+            <input type="password" name="bind_pass" id="ldap-bind-pass" class="nx-input"
+                   placeholder="Leave empty for anonymous" autocomplete="off">
+        </div>
+        <div class="nx-input-group">
+            <label class="nx-label">Base DN</label>
+            <input type="text" name="base_dn" id="ldap-base" class="nx-input"
+                   value="dc=nexuscorp,dc=local" autocomplete="off">
+        </div>
+        <div class="nx-input-group">
+            <label class="nx-label">Search Filter</label>
+            <input type="text" name="filter" id="ldap-filter" class="nx-input"
+                   value="(objectClass=*)" autocomplete="off">
+        </div>
+        <div class="nx-input-group">
+            <label class="nx-label">Attributes (* for all)</label>
+            <input type="text" name="attributes" id="ldap-attrs" class="nx-input"
+                   value="*" autocomplete="off">
+        </div>
+        <button type="submit" class="nx-btn">Execute Search</button>
+    </form>
+</div>
+
+<!-- Results -->
+<div class="nx-card" id="ldap-results-card" style="display:none; margin-top:1rem;">
+    <h3 class="nx-card-title">Search Results</h3>
+    <div class="nx-terminal">
+        <div class="nx-terminal-header">
+            <span class="nx-terminal-dot nx-terminal-dot--red"></span>
+            <span class="nx-terminal-dot nx-terminal-dot--yellow"></span>
+            <span class="nx-terminal-dot nx-terminal-dot--green"></span>
+            <span class="nx-terminal-title">ldapsearch output</span>
+        </div>
+        <div class="nx-terminal-body" id="ldap-output" style="max-height:500px;"></div>
+    </div>
+</div>
+
+<!-- Hints -->
+<div class="hint-box">
+    <button class="nx-btn nx-btn--red hint-btn" data-level="5" data-hint-num="0">Request Intel</button>
+    <div class="hint-text"></div>
+</div>
+
+{% if not solved %}
+<div class="nx-card" style="margin-top:1.5rem;">
+    <h3 class="nx-card-title">Submit Level 5 Flag</h3>
+    <form class="flag-form flag-submit">
+        <input type="hidden" name="level" value="5">
+        <input type="text" name="flag" class="nx-input" placeholder="NEXUS{...}" required>
+        <button type="submit" class="nx-btn nx-btn--green">Submit</button>
+    </form>
+    <div class="flag-result"></div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById("ldap-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const output = document.getElementById("ldap-output");
+    const card = document.getElementById("ldap-results-card");
+
+    const data = new FormData();
+    data.set("bind_dn", document.getElementById("ldap-bind-dn").value);
+    data.set("bind_pass", document.getElementById("ldap-bind-pass").value);
+    data.set("base_dn", document.getElementById("ldap-base").value);
+    data.set("filter", document.getElementById("ldap-filter").value);
+    data.set("attributes", document.getElementById("ldap-attrs").value);
+
+    try {
+        const res = await fetch("/level/5/ldap-search", { method: "POST", body: data });
+        const json = await res.json();
+
+        card.style.display = "block";
+
+        if (!json.success) {
+            output.innerHTML = `<pre style="color:var(--nx-red);">${json.message}</pre>`;
+            return;
+        }
+
+        let text = `# extended LDIF\n# bind: ${json.bind}\n# results: ${json.num_results}\n\n`;
+
+        json.results.forEach(entry => {
+            text += `dn: ${entry.dn || 'N/A'}\n`;
+            Object.entries(entry).forEach(([k, v]) => {
+                if (k !== 'dn') text += `${k}: ${v}\n`;
+            });
+            text += `\n`;
+        });
+
+        if (json.flag) {
+            text += `\n# ── ACCESS GRANTED ──\n# FLAG: ${json.flag}\n`;
+        }
+        if (json.hint) {
+            text += `# HINT: ${json.hint}\n`;
+        }
+
+        text += `\n# numResponses: ${json.num_results}`;
+
+        output.innerHTML = `<pre style="color:var(--nx-green);">${text}</pre>`;
+    } catch {
+        card.style.display = "block";
+        output.innerHTML = `<pre style="color:var(--nx-red);">Connection to LDAP server failed.</pre>`;
+    }
+});
+</script>
+{% endblock %}

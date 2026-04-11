@@ -1,0 +1,619 @@
+/* ============================================================
+   NEXUS CORP CTF — Cyberpunk Corporate Theme
+   ============================================================ */
+
+:root {
+    --nx-bg:         #0a0a0f;
+    --nx-bg-card:    #0f1019;
+    --nx-bg-input:   #12131f;
+    --nx-border:     #1a1b2e;
+    --nx-border-hi:  #2a2d4a;
+    --nx-text:       #c8cad4;
+    --nx-text-dim:   #5a5d72;
+    --nx-text-bright:#e8eaf0;
+    --nx-accent:     #00f0ff;
+    --nx-accent-dim: #00838a;
+    --nx-red:        #ff2d55;
+    --nx-red-dim:    #8a1a30;
+    --nx-green:      #00ff88;
+    --nx-green-dim:  #00804a;
+    --nx-yellow:     #ffd600;
+    --nx-purple:     #a855f7;
+    --nx-orange:     #ff8c00;
+    --nx-glow:       0 0 20px rgba(0,240,255,0.15);
+    --nx-glow-red:   0 0 20px rgba(255,45,85,0.15);
+    --nx-glow-green: 0 0 20px rgba(0,255,136,0.15);
+    --nx-radius:     4px;
+    --nx-font-mono:  'JetBrains Mono', 'Fira Code', monospace;
+    --nx-font-display: 'Orbitron', sans-serif;
+    --nx-font-body:  'Inter', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 15px; scroll-behavior: smooth; }
+
+body {
+    font-family: var(--nx-font-body);
+    background: var(--nx-bg);
+    color: var(--nx-text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* Scanlines */
+.scanline-overlay {
+    pointer-events: none;
+    position: fixed; inset: 0; z-index: 9999;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.03) 2px,
+        rgba(0,0,0,0.03) 4px
+    );
+}
+
+/* ── NAV ────────────────────────────────────────────────── */
+.nexus-nav {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.8rem 2rem;
+    background: rgba(10,10,15,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--nx-border);
+}
+
+.nav-logo {
+    font-family: var(--nx-font-display);
+    font-size: 1.15rem;
+    font-weight: 700;
+    text-decoration: none;
+    color: var(--nx-text-bright);
+    letter-spacing: 2px;
+}
+.logo-bracket { color: var(--nx-accent); }
+.logo-accent  { color: var(--nx-accent); }
+
+.nav-links { display: flex; align-items: center; gap: 1.5rem; }
+.nav-link {
+    font-family: var(--nx-font-mono);
+    font-size: 0.8rem;
+    text-decoration: none;
+    color: var(--nx-text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: color 0.2s;
+}
+.nav-link:hover { color: var(--nx-accent); }
+.nav-link--danger:hover { color: var(--nx-red); }
+.nav-team {
+    font-family: var(--nx-font-mono);
+    font-size: 0.75rem;
+    color: var(--nx-accent);
+    background: rgba(0,240,255,0.06);
+    padding: 0.3rem 0.7rem;
+    border: 1px solid var(--nx-accent-dim);
+    border-radius: var(--nx-radius);
+}
+
+/* ── MAIN ────────────────────────────────────────────────── */
+.nexus-main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+}
+
+/* ── TYPOGRAPHY ──────────────────────────────────────────── */
+.section-title {
+    font-family: var(--nx-font-display);
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: var(--nx-text-bright);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+}
+.section-subtitle {
+    font-family: var(--nx-font-mono);
+    font-size: 0.85rem;
+    color: var(--nx-text-dim);
+    margin-bottom: 2rem;
+}
+.level-badge {
+    display: inline-block;
+    font-family: var(--nx-font-display);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 0.25rem 0.6rem;
+    border-radius: 2px;
+    margin-bottom: 1rem;
+}
+.level-badge--active {
+    background: rgba(0,240,255,0.1);
+    color: var(--nx-accent);
+    border: 1px solid var(--nx-accent-dim);
+}
+.level-badge--solved {
+    background: rgba(0,255,136,0.1);
+    color: var(--nx-green);
+    border: 1px solid var(--nx-green-dim);
+}
+.level-badge--locked {
+    background: rgba(255,45,85,0.06);
+    color: var(--nx-red);
+    border: 1px solid var(--nx-red-dim);
+}
+
+/* ── CARDS ────────────────────────────────────────────────── */
+.nx-card {
+    background: var(--nx-bg-card);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    transition: border-color 0.3s;
+}
+.nx-card:hover { border-color: var(--nx-border-hi); }
+.nx-card--accent { border-left: 3px solid var(--nx-accent); }
+.nx-card--red    { border-left: 3px solid var(--nx-red); }
+.nx-card--green  { border-left: 3px solid var(--nx-green); }
+
+.nx-card-title {
+    font-family: var(--nx-font-display);
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--nx-text-bright);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+}
+
+/* ── FORMS ────────────────────────────────────────────────── */
+.nx-input-group { margin-bottom: 1rem; }
+.nx-label {
+    display: block;
+    font-family: var(--nx-font-mono);
+    font-size: 0.7rem;
+    color: var(--nx-text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.35rem;
+}
+.nx-input {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    background: var(--nx-bg-input);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius);
+    color: var(--nx-text-bright);
+    font-family: var(--nx-font-mono);
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.nx-input:focus {
+    border-color: var(--nx-accent);
+    box-shadow: var(--nx-glow);
+}
+.nx-input::placeholder { color: var(--nx-text-dim); }
+
+.nx-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.4rem;
+    font-family: var(--nx-font-mono);
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border: 1px solid var(--nx-accent);
+    background: rgba(0,240,255,0.06);
+    color: var(--nx-accent);
+    border-radius: var(--nx-radius);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.nx-btn:hover {
+    background: rgba(0,240,255,0.15);
+    box-shadow: var(--nx-glow);
+}
+.nx-btn:active { transform: scale(0.98); }
+.nx-btn--red {
+    border-color: var(--nx-red);
+    color: var(--nx-red);
+    background: rgba(255,45,85,0.06);
+}
+.nx-btn--red:hover {
+    background: rgba(255,45,85,0.15);
+    box-shadow: var(--nx-glow-red);
+}
+.nx-btn--green {
+    border-color: var(--nx-green);
+    color: var(--nx-green);
+    background: rgba(0,255,136,0.06);
+}
+.nx-btn--green:hover {
+    background: rgba(0,255,136,0.15);
+    box-shadow: var(--nx-glow-green);
+}
+.nx-btn--solid {
+    background: var(--nx-accent);
+    color: var(--nx-bg);
+    font-weight: 700;
+}
+.nx-btn--solid:hover {
+    background: #33f5ff;
+}
+
+/* ── TERMINAL ────────────────────────────────────────────── */
+.nx-terminal {
+    background: #050508;
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius);
+    font-family: var(--nx-font-mono);
+    font-size: 0.82rem;
+    line-height: 1.6;
+    overflow: hidden;
+}
+.nx-terminal-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(20,20,30,0.8);
+    border-bottom: 1px solid var(--nx-border);
+}
+.nx-terminal-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+}
+.nx-terminal-dot--red    { background: var(--nx-red); }
+.nx-terminal-dot--yellow { background: var(--nx-yellow); }
+.nx-terminal-dot--green  { background: var(--nx-green); }
+.nx-terminal-title {
+    font-size: 0.7rem;
+    color: var(--nx-text-dim);
+    margin-left: 0.5rem;
+}
+.nx-terminal-body {
+    padding: 1rem;
+    max-height: 450px;
+    overflow-y: auto;
+    color: var(--nx-green);
+}
+.nx-terminal-body pre {
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+.nx-terminal-input-line {
+    display: flex;
+    align-items: center;
+    padding: 0.3rem 1rem 0.8rem;
+    background: #050508;
+}
+.nx-terminal-prompt {
+    color: var(--nx-accent);
+    margin-right: 0.5rem;
+    white-space: nowrap;
+}
+.nx-terminal-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--nx-green);
+    font-family: var(--nx-font-mono);
+    font-size: 0.82rem;
+    outline: none;
+    caret-color: var(--nx-accent);
+}
+
+/* ── RESULTS TABLE ───────────────────────────────────────── */
+.nx-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--nx-font-mono);
+    font-size: 0.8rem;
+    margin-top: 1rem;
+}
+.nx-table th {
+    text-align: left;
+    padding: 0.6rem 0.8rem;
+    background: rgba(0,240,255,0.04);
+    color: var(--nx-accent);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.7rem;
+    border-bottom: 1px solid var(--nx-border);
+}
+.nx-table td {
+    padding: 0.5rem 0.8rem;
+    border-bottom: 1px solid var(--nx-border);
+    color: var(--nx-text);
+}
+.nx-table tr:hover td {
+    background: rgba(0,240,255,0.02);
+}
+
+/* ── FLASH MESSAGES ──────────────────────────────────────── */
+.flash-container {
+    max-width: 1100px;
+    margin: 1rem auto 0;
+    padding: 0 1.5rem;
+}
+.flash {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.7rem 1rem;
+    border-radius: var(--nx-radius);
+    font-family: var(--nx-font-mono);
+    font-size: 0.8rem;
+    margin-bottom: 0.5rem;
+    animation: flashIn 0.3s ease;
+}
+@keyframes flashIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.flash--error   { background: rgba(255,45,85,0.08); border: 1px solid var(--nx-red-dim); color: var(--nx-red); }
+.flash--success { background: rgba(0,255,136,0.08); border: 1px solid var(--nx-green-dim); color: var(--nx-green); }
+.flash--warning { background: rgba(255,214,0,0.08); border: 1px solid rgba(255,214,0,0.3); color: var(--nx-yellow); }
+
+/* ── LEVEL PROGRESS GRID ────────────────────────────────── */
+.level-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+.level-card {
+    background: var(--nx-bg-card);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius);
+    padding: 1.2rem;
+    text-decoration: none;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+}
+.level-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--nx-accent), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+.level-card:hover::before { opacity: 1; }
+.level-card:hover {
+    border-color: var(--nx-border-hi);
+    transform: translateY(-2px);
+}
+.level-card--solved {
+    border-color: var(--nx-green-dim);
+}
+.level-card--solved::before {
+    background: linear-gradient(90deg, transparent, var(--nx-green), transparent);
+}
+.level-card--locked {
+    opacity: 0.45;
+    pointer-events: none;
+}
+.level-number {
+    font-family: var(--nx-font-display);
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--nx-accent);
+    opacity: 0.2;
+    position: absolute;
+    top: 0.5rem; right: 0.8rem;
+}
+.level-card--solved .level-number { color: var(--nx-green); opacity: 0.3; }
+.level-card-title {
+    font-family: var(--nx-font-display);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--nx-text-bright);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+}
+.level-card-desc {
+    font-size: 0.82rem;
+    color: var(--nx-text-dim);
+    line-height: 1.5;
+}
+.level-card-tools {
+    margin-top: 0.6rem;
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+.tool-tag {
+    font-family: var(--nx-font-mono);
+    font-size: 0.65rem;
+    padding: 0.15rem 0.45rem;
+    background: rgba(168,85,247,0.1);
+    color: var(--nx-purple);
+    border: 1px solid rgba(168,85,247,0.25);
+    border-radius: 2px;
+    text-transform: uppercase;
+}
+
+/* ── FLAG SUBMISSION ─────────────────────────────────────── */
+.flag-submit {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+    align-items: flex-end;
+}
+.flag-submit .nx-input { flex: 1; }
+.flag-result {
+    margin-top: 0.75rem;
+    font-family: var(--nx-font-mono);
+    font-size: 0.8rem;
+    padding: 0.6rem;
+    border-radius: var(--nx-radius);
+    display: none;
+}
+.flag-result--success {
+    display: block;
+    background: rgba(0,255,136,0.08);
+    border: 1px solid var(--nx-green-dim);
+    color: var(--nx-green);
+}
+.flag-result--error {
+    display: block;
+    background: rgba(255,45,85,0.08);
+    border: 1px solid var(--nx-red-dim);
+    color: var(--nx-red);
+}
+
+/* ── HINT SYSTEM ─────────────────────────────────────────── */
+.hint-box {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: rgba(255,214,0,0.04);
+    border: 1px solid rgba(255,214,0,0.15);
+    border-radius: var(--nx-radius);
+}
+.hint-text {
+    font-family: var(--nx-font-mono);
+    font-size: 0.8rem;
+    color: var(--nx-yellow);
+    margin-top: 0.5rem;
+    display: none;
+}
+
+/* ── SCOREBOARD ──────────────────────────────────────────── */
+.score-rank {
+    font-family: var(--nx-font-display);
+    font-weight: 900;
+    color: var(--nx-accent);
+    font-size: 1.1rem;
+}
+.score-rank--1 { color: var(--nx-yellow); }
+.score-rank--2 { color: #b0b0b0; }
+.score-rank--3 { color: #cd7f32; }
+
+/* ── FOOTER ──────────────────────────────────────────────── */
+.nexus-footer {
+    text-align: center;
+    padding: 2rem;
+    font-family: var(--nx-font-mono);
+    font-size: 0.7rem;
+    color: var(--nx-text-dim);
+}
+.footer-line {
+    width: 60px;
+    height: 1px;
+    background: var(--nx-border);
+    margin: 0 auto 1rem;
+}
+.footer-sub {
+    margin-top: 0.3rem;
+    opacity: 0.5;
+}
+
+/* ── HERO SECTION (Index) ────────────────────────────────── */
+.hero {
+    text-align: center;
+    padding: 4rem 0 3rem;
+    position: relative;
+}
+.hero-title {
+    font-family: var(--nx-font-display);
+    font-size: 3rem;
+    font-weight: 900;
+    letter-spacing: 8px;
+    color: var(--nx-text-bright);
+    text-shadow: 0 0 40px rgba(0,240,255,0.2);
+    margin-bottom: 0.5rem;
+}
+.hero-title span { color: var(--nx-accent); }
+.hero-subtitle {
+    font-family: var(--nx-font-mono);
+    font-size: 0.85rem;
+    color: var(--nx-text-dim);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+}
+.hero-desc {
+    max-width: 600px;
+    margin: 1.5rem auto 0;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: var(--nx-text);
+}
+
+/* ── AUTH FORMS ───────────────────────────────────────────── */
+.auth-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    max-width: 700px;
+    margin: 2rem auto;
+}
+
+/* ── BRIEFING BOX ────────────────────────────────────────── */
+.briefing {
+    background: var(--nx-bg-card);
+    border: 1px solid var(--nx-accent-dim);
+    border-radius: var(--nx-radius);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    position: relative;
+}
+.briefing::before {
+    content: 'MISSION BRIEFING';
+    font-family: var(--nx-font-display);
+    font-size: 0.6rem;
+    letter-spacing: 2px;
+    color: var(--nx-accent);
+    position: absolute;
+    top: -0.5rem; left: 1rem;
+    background: var(--nx-bg-card);
+    padding: 0 0.5rem;
+}
+.briefing p {
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: var(--nx-text);
+    margin-bottom: 0.5rem;
+}
+.briefing code {
+    background: rgba(0,240,255,0.08);
+    color: var(--nx-accent);
+    padding: 0.1rem 0.4rem;
+    border-radius: 2px;
+    font-family: var(--nx-font-mono);
+    font-size: 0.8rem;
+}
+
+/* ── ANIMATIONS ──────────────────────────────────────────── */
+@keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 5px rgba(0,240,255,0.1); }
+    50%      { box-shadow: 0 0 20px rgba(0,240,255,0.2); }
+}
+.pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
+
+@keyframes typewriter {
+    from { width: 0; }
+    to   { width: 100%; }
+}
+
+/* ── RESPONSIVE ──────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .hero-title { font-size: 2rem; letter-spacing: 4px; }
+    .auth-container { grid-template-columns: 1fr; }
+    .level-grid { grid-template-columns: 1fr; }
+    .nexus-nav { padding: 0.6rem 1rem; flex-wrap: wrap; gap: 0.5rem; }
+    .nav-links { gap: 0.8rem; }
+}

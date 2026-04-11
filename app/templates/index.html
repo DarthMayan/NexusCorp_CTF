@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}NEXUS Corp — Breach Protocol{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <h1 class="hero-title">NEXUS<span>CORP</span></h1>
+    <p class="hero-subtitle">Capture The Flag — Corporate Infiltration</p>
+    <p class="hero-desc">
+        NEXUS Corp is a corrupt tech corporation hiding illegal operations behind layers of security.
+        Your mission: infiltrate their systems, escalate privileges through 6 security layers,
+        and expose the truth hidden in the CEO's vault.
+    </p>
+</div>
+
+<div class="auth-container">
+    <div class="nx-card nx-card--accent">
+        <h3 class="nx-card-title">Register Team</h3>
+        <form action="{{ url_for('register') }}" method="POST">
+            <div class="nx-input-group">
+                <label class="nx-label">Team Name</label>
+                <input type="text" name="team_name" class="nx-input" placeholder="Enter callsign..." required>
+            </div>
+            <div class="nx-input-group">
+                <label class="nx-label">Password</label>
+                <input type="password" name="password" class="nx-input" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="nx-btn nx-btn--solid">Initialize</button>
+        </form>
+    </div>
+
+    <div class="nx-card">
+        <h3 class="nx-card-title">Team Login</h3>
+        <form action="{{ url_for('team_login') }}" method="POST">
+            <div class="nx-input-group">
+                <label class="nx-label">Team Name</label>
+                <input type="text" name="team_name" class="nx-input" placeholder="Enter callsign..." required>
+            </div>
+            <div class="nx-input-group">
+                <label class="nx-label">Password</label>
+                <input type="password" name="password" class="nx-input" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="nx-btn">Connect</button>
+        </form>
+    </div>
+</div>
+
+<!-- Mission overview -->
+<div class="nx-card" style="max-width:700px; margin: 2rem auto;">
+    <h3 class="nx-card-title">Mission Parameters</h3>
+    <div style="display:grid; grid-template-columns: auto 1fr; gap: 0.4rem 1rem; font-size:0.85rem;">
+        <span style="color:var(--nx-accent); font-family:var(--nx-font-mono);">LEVELS</span>
+        <span>6 security layers to breach</span>
+        <span style="color:var(--nx-accent); font-family:var(--nx-font-mono);">TOOLS</span>
+        <span>Hydra, sqlmap, Hashcat, John the Ripper, SSH, LDAP</span>
+        <span style="color:var(--nx-accent); font-family:var(--nx-font-mono);">FLAGS</span>
+        <span>Format: NEXUS{...}</span>
+        <span style="color:var(--nx-accent); font-family:var(--nx-font-mono);">RULES</span>
+        <span>No attacking the CTF infrastructure. Only target the challenge endpoints.</span>
+    </div>
+</div>
+{% endblock %}

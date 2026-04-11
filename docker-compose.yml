@@ -1,0 +1,21 @@
+services:
+  nexus-ctf:
+    build: .
+    container_name: nexus-corp-ctf
+    ports:
+      - "5000:5000"
+    environment:
+      - SECRET_KEY=NEXUS_pr0d_k3y_ch4ng3_th1s!
+      - RATE_LIMIT=120
+      - RATE_WINDOW=60
+    volumes:
+      - ctf-data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  ctf-data:

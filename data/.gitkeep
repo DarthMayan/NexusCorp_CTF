@@ -1,0 +1,2 @@
+SQLite databases are generated here by init_db.py
+Do not commit .db files.
