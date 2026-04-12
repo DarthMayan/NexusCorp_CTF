@@ -379,7 +379,7 @@ def register():
         flash(f"Team '{name}' registered. Welcome, operative.", "success")
     except sqlite3.IntegrityError:
         flash("Team name already taken.", "error")
-    return redirect(url_for("dashboard"))
+    return redirect(url_for("challenges"))
 
 
 @app.route("/team-login", methods=["POST"])
@@ -392,7 +392,7 @@ def team_login():
         session["team_id"] = row["id"]
         session["team_name"] = row["team_name"]
         session.permanent = True
-        return redirect(url_for("dashboard"))
+        return redirect(url_for("challenges"))
     flash("Invalid team credentials.", "error")
     return redirect(url_for("index"))
 
@@ -404,18 +404,24 @@ def logout():
 
 
 # ---------------------------------------------------------------------------
-# Routes – Dashboard & Scoreboard
+# Routes – Challenges (level grid) & Scoreboard
 # ---------------------------------------------------------------------------
 
-@app.route("/dashboard")
+@app.route("/challenges")
 @team_required
-def dashboard():
+def challenges():
     solved = get_team_progress(session["team_id"])
     return render_template("dashboard.html",
                            team_name=session["team_name"],
                            solved=solved,
                            total_levels=6,
                            flags=FLAGS)
+
+
+@app.route("/dashboard")
+def dashboard_redirect():
+    """Legacy URL — old bookmarks and docs still work."""
+    return redirect(url_for("challenges"))
 
 
 @app.route("/scoreboard")

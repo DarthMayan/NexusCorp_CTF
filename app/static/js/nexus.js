@@ -137,7 +137,7 @@ document.addEventListener("DOMContentLoaded", () => {
         termBody.scrollTop = termBody.scrollHeight;
     }
 
-    // ── Dashboard progress bar ──────────────────────────────
+    // ── Challenges page progress bar ────────────────────────
     const progressBar = document.getElementById("dash-progress");
     if (progressBar) {
         progressBar.style.width = progressBar.dataset.pct + "%";

@@ -20,7 +20,7 @@
         </a>
         <div class="nav-links">
             {% if session.get('team_id') %}
-                <a href="{{ url_for('dashboard') }}" class="nav-link">Dashboard</a>
+                <a href="{{ url_for('challenges') }}" class="nav-link">Challenges</a>
                 <a href="{{ url_for('scoreboard') }}" class="nav-link">Scoreboard</a>
                 <span class="nav-team">{{ session.get('team_name', 'Unknown') }}</span>
                 <a href="{{ url_for('logout') }}" class="nav-link nav-link--danger">Disconnect</a>
@@ -46,6 +46,11 @@
 
     <!-- Main content -->
     <main class="nexus-main">
+        {% if request.path.startswith('/level/') %}
+        <div class="nx-back-bar">
+            <a href="{{ url_for('challenges') }}" class="nx-back-link">&larr; Back to Challenges</a>
+        </div>
+        {% endif %}
         {% block content %}{% endblock %}
     </main>
 

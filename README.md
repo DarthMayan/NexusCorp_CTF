@@ -31,7 +31,7 @@ You are a hired operative tasked with infiltrating NEXUS Corp — a corrupt tech
 docker compose up --build -d
 ```
 
-The platform will be available at `http://localhost:5000`
+The platform will be available at `http://localhost:5000`. After team login, the level grid is at `/challenges` (legacy `/dashboard` redirects there).
 
 ### Option 2: Local Development
 
@@ -73,7 +73,7 @@ nexus-corp-ctf/
 │   └── templates/
 │       ├── base.html           # Base template
 │       ├── index.html          # Landing page
-│       ├── dashboard.html      # Team progress dashboard
+│       ├── dashboard.html      # Challenges grid (route `/challenges`)
 │       ├── scoreboard.html     # Live rankings
 │       └── levels/
 │           ├── level1.html     # Employee Portal
@@ -191,7 +191,7 @@ sqlmap -u "http://TARGET:5000/level/2/search?search=test&format=json" \
 | nexus-backup-srv | backup | `a67c4d15c47b4899e4a71024acf4aaa2` | MD5 |
 | nexus-dev-srv | devops | (SHA256 in DB) | SHA256 |
 
-The Level 2 flag is **not** returned by SQLi automatically; teams submit it through the dashboard (see the **All flags** table at the end of this section).
+The Level 2 flag is **not** returned by SQLi automatically; teams submit it through the Challenges page (see the **All flags** table at the end of this section).
 
 ---
 
@@ -344,9 +344,9 @@ Only `doc_id=73` returns the full document list; the flag appears inside the `Pr
 
 ---
 
-### Appendix: Why Hydra / sqlmap / WFUZZ work without dashboard “unlocks”
+### Appendix: Why Hydra / sqlmap / WFUZZ work without Challenges UI “unlocks”
 
-Level progression on the **dashboard is cosmetic** (Jinja locks links to `#` until the prior flag is submitted). The **server does not enforce a global level chain** on the attack endpoints, so tools can send bare HTTP without a Flask `session` cookie.
+Level progression on the **Challenges grid** (`/challenges`) is cosmetic (Jinja locks links to `#` until the prior flag is submitted). The **server does not enforce a global level chain** on the attack endpoints, so tools can send bare HTTP without a Flask `session` cookie.
 
 **sqlmap on Level 2:** `/level/2/search` has **no** `@team_required`:
 
@@ -403,7 +403,7 @@ git push origin feature/new-level-or-fix
 2. Create the route handlers in `app/main.py`
 3. Create the template in `app/templates/levels/levelN.html`
 4. Add hints to the `HINTS` dict
-5. Add the level card to `dashboard.html`
+5. Add the level card to `dashboard.html` (served at `/challenges`)
 6. Add any needed database tables in `init_databases()`
 7. Update `total_levels` references
 

@@ -105,6 +105,26 @@ body {
     padding: 2rem 1.5rem 4rem;
 }
 
+.nx-back-bar {
+    margin-bottom: 1.25rem;
+}
+.nx-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: var(--nx-font-mono);
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--nx-accent);
+    text-decoration: none;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+.nx-back-link:hover {
+    color: var(--nx-text-bright);
+    text-decoration: underline;
+}
+
 /* ── TYPOGRAPHY ──────────────────────────────────────────── */
 .section-title {
     font-family: var(--nx-font-display);
