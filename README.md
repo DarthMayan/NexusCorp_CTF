@@ -17,7 +17,7 @@ You are a hired operative tasked with infiltrating NEXUS Corp — a corrupt tech
 | 3 | Hash Cracking | Crack MD5/SHA256 hashes | Hashcat, John the Ripper |
 | 4 | SSH Infiltration | Filesystem exploration | SSH (simulated terminal) |
 | 5 | LDAP Enumeration | Directory service enumeration | LDAP queries |
-| 6 | Vault API Fuzzing | API endpoint & parameter discovery | WFUZZ, curl |
+| 6 | Vault API Fuzzing | API endpoint & parameter discovery | ffuf, curl |
 
 **Flag format:** `NEXUS{...}`
 
@@ -128,7 +128,7 @@ The platform is designed to handle heavy attack traffic:
 | `SECRET_KEY` | dev key | Flask session secret (CHANGE IN PROD) |
 | `RATE_LIMIT` | 60 | Max requests per IP per window |
 | `RATE_WINDOW` | 60 | Rate limit window in seconds |
-| `RATE_LIMIT_FUZZ` | 300 | Higher per-IP budget for `/level/6/vault-api` (WFUZZ) |
+| `RATE_LIMIT_FUZZ` | 300 | Higher per-IP budget for `/level/6/vault-api` (ffuf) |
 
 ---
 
@@ -260,7 +260,7 @@ cat /tmp/debug_dump.txt    # flag is embedded here
 
 ---
 
-### Level 6: Vault API Fuzzing (WFUZZ)
+### Level 6: Vault API Fuzzing (ffuf)
 
 **Flag:** `NEXUS{fuzz_th3_v4ult_ap1_d1sc0v3r3d_8k2m}`
 
@@ -283,9 +283,10 @@ wget http://TARGET:5000/level/6/api-wordlist.txt -O api-wordlist.txt
 **Step 2 — Phase 1 (discover endpoints):**
 
 ```bash
-wfuzz -w api-wordlist.txt --hc 404 \
+ffuf -w api-wordlist.txt \
   -H "X-Vault-Token: V4ult_M4st3r_K3y!" \
-  http://TARGET:5000/level/6/vault-api/FUZZ
+  -u http://TARGET:5000/level/6/vault-api/FUZZ \
+  -fc 404
 ```
 
 Expect 200/403 hits on: `status`, `health`, `config` (403), `logs`, `backup`, `archives`.
@@ -305,27 +306,30 @@ Response hints at `doc_id` and `total_classified: 95`. The `logs` endpoint JSON 
 curl -s -H "X-Vault-Token: V4ult_M4st3r_K3y!" \
   "http://TARGET:5000/level/6/vault-api/archives?doc_id=1"
 
-wfuzz -z range,1-95 --hw 7 \
+seq 1 95 > nums.txt
+ffuf -w nums.txt \
   -H "X-Vault-Token: V4ult_M4st3r_K3y!" \
-  "http://TARGET:5000/level/6/vault-api/archives?doc_id=FUZZ"
+  -u "http://TARGET:5000/level/6/vault-api/archives?doc_id=FUZZ" \
+  -fw 7
 ```
 
-The exact `--hw` value depends on Flask JSON layout; run once without `--hw`, note the dominant word count for "not found" responses, then filter. `--hh` (hide by character count) is an alternative.
+The exact `-fw` value depends on Flask JSON layout; run once without `-fw`, note the dominant word count for "not found" responses, then filter. `-fs` (filter by response size) is an alternative.
 
 Only `doc_id=73` returns the full document list; the flag appears inside the `Project_Chimera_Financials.pdf` content in the JSON.
 
-**Common WFUZZ flags (Level 6):**
+**Common ffuf flags (Level 6):**
 
 | Flag | Purpose |
 |------|---------|
-| `-w <file>` | Wordlist payloads |
-| `-z range,1-95` | Numeric range payloads |
+| `-w <file>` | Wordlist payloads (replace FUZZ) |
+| `-u <url>` | Target URL with FUZZ keyword |
 | `FUZZ` | Placeholder replaced per request |
-| `--hc 404` | Hide HTTP 404 (Phase 1) |
-| `--hw N` | Hide responses with N words (Phase 2) |
+| `-fc 404` | Filter (hide) HTTP 404 (Phase 1) |
+| `-fw N` | Filter (hide) responses with N words (Phase 2) |
+| `-fs N` | Filter (hide) responses by size (alternative) |
 | `-H "Key: Val"` | Send `X-Vault-Token` on every request |
 
-**Difficulty notes:** Two chained fuzz passes; filter tuning; optional log breadcrumb; header auth on every wfuzz line.
+**Difficulty notes:** Two chained fuzz passes; filter tuning; optional log breadcrumb; header auth on every ffuf command.
 
 **Implementation touchpoints:** `app/main.py` (routes, flag, `RATE_LIMIT_FUZZ`, wordlist), `app/templates/levels/level6.html`, `app/templates/dashboard.html`, `WALKTHROUGH.md`, `scripts/init_db.py` (`ceo_vault` seed).
 
@@ -344,7 +348,7 @@ Only `doc_id=73` returns the full document list; the flag appears inside the `Pr
 
 ---
 
-### Appendix: Why Hydra / sqlmap / WFUZZ work without Challenges UI “unlocks”
+### Appendix: Why Hydra / sqlmap / ffuf work without Challenges UI “unlocks”
 
 Level progression on the **Challenges grid** (`/challenges`) is cosmetic (Jinja locks links to `#` until the prior flag is submitted). The **server does not enforce a global level chain** on the attack endpoints, so tools can send bare HTTP without a Flask `session` cookie.
 
@@ -357,7 +361,7 @@ def level2_search():
 
 Use `format=json` for cleaner parsing (see Level 2 commands above).
 
-**WFUZZ on Level 6:** `/level/6/vault-api/*` has **no** `@team_required`; only `X-Vault-Token` (the cracked `vault_svc` password) is checked.
+**ffuf on Level 6:** `/level/6/vault-api/*` has **no** `@team_required`; only `X-Vault-Token` (the cracked `vault_svc` password) is checked.
 
 **Where `team_required` still applies:** HTML briefing routes like `/level/2`, `/level/3`, `/level/6` need a logged-in team. `/level/3/verify` also requires session — use browser login or `sqlmap --cookie` / `curl -b` if you refactor.
 
@@ -367,9 +371,9 @@ Use `format=json` for cleaner parsing (see Level 2 commands above).
 | `/level/1/login` | None | Yes — Hydra |
 | `/level/2/search` | None | Yes — sqlmap |
 | `/level/3/verify` | `@team_required` | No (unless `--cookie`) |
-| `/level/6/vault-api/*` | `X-Vault-Token` | Yes — WFUZZ with `-H` |
+| `/level/6/vault-api/*` | `X-Vault-Token` | Yes — ffuf with `-H` |
 
-Adding **real** server-side progression would require passing the team cookie into tools (`sqlmap --cookie`, `wfuzz -b`), increasing realism and setup cost.
+Adding **real** server-side progression would require passing the team cookie into tools (`sqlmap --cookie`, `ffuf -b`), increasing realism and setup cost.
 
 ---
 

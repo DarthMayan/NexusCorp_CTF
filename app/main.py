@@ -928,7 +928,7 @@ def level5_ldap():
 
 
 # ---------------------------------------------------------------------------
-# LEVEL 6 – Vault API Fuzzing (WFUZZ)
+# LEVEL 6 – Vault API Fuzzing (ffuf)
 # ---------------------------------------------------------------------------
 
 VAULT_API_TOKEN = "V4ult_M4st3r_K3y!"
@@ -1006,7 +1006,7 @@ def level6_archives():
     Archives endpoint — Phase 2 target.
     Without doc_id: returns metadata hinting at document range.
     With doc_id=73: returns classified documents + flag.
-    Other doc_ids: returns 'not found' (uniform response for WFUZZ filtering).
+    Other doc_ids: returns 'not found' (uniform response for ffuf filtering).
     """
     token = request.headers.get("X-Vault-Token", "")
     if token != VAULT_API_TOKEN:
@@ -1104,9 +1104,9 @@ HINTS = {
     ],
     6: [
         "The vault API authenticates via an X-Vault-Token header. Use the cracked vault_svc password.",
-        "Phase 1: wfuzz -w wordlist.txt --hc 404 -H 'X-Vault-Token: ...' http://TARGET/level/6/vault-api/FUZZ",
+        "Phase 1: ffuf -w wordlist.txt -H 'X-Vault-Token: ...' -u http://TARGET/level/6/vault-api/FUZZ -fc 404",
         "Look at the 'archives' endpoint response — it tells you how many documents exist.",
-        "Phase 2: Fuzz doc_id with -z range. Use --hw to hide the common 'not found' word count.",
+        "Phase 2: Generate seq 1 95 > nums.txt, then ffuf with -fw to hide the common word count.",
         "The logs endpoint has a breadcrumb — check which doc_id was recently retrieved.",
     ],
 }

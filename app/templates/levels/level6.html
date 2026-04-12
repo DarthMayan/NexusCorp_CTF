@@ -33,41 +33,44 @@
         </div>
     </div>
     <p>
-        Your mission: use <strong>WFUZZ</strong> to discover the API's hidden endpoints and
+        Your mission: use <strong>ffuf</strong> to discover the API's hidden endpoints and
         locate the classified CEO documents. A partial list of NEXUS Corp internal API endpoint
         names was recovered from a deleted configuration backup —
         <a href="/level/6/api-wordlist.txt" target="_blank" style="color:var(--nx-accent);">download the wordlist here</a>.
     </p>
 </div>
 
-<!-- WFUZZ Command Reference -->
+<!-- ffuf Command Reference -->
 <div class="nx-card nx-card--red">
-    <h3 class="nx-card-title">WFUZZ Attack Briefing</h3>
+    <h3 class="nx-card-title">ffuf Attack Briefing</h3>
     <div class="nx-terminal">
         <div class="nx-terminal-header">
             <span class="nx-terminal-dot nx-terminal-dot--red"></span>
             <span class="nx-terminal-dot nx-terminal-dot--yellow"></span>
             <span class="nx-terminal-dot nx-terminal-dot--green"></span>
-            <span class="nx-terminal-title">wfuzz reference</span>
+            <span class="nx-terminal-title">ffuf reference</span>
         </div>
         <div class="nx-terminal-body">
 <pre style="color:var(--nx-red);"># ── Phase 1: Discover hidden API endpoints ──────────────────
-wfuzz -w ./api-wordlist.txt --hc 404 \
+ffuf -w ./api-wordlist.txt \
   -H "X-Vault-Token: &lt;CRACKED_PASSWORD&gt;" \
-  http://&lt;TARGET&gt;:5000/level/6/vault-api/FUZZ
+  -u http://&lt;TARGET&gt;:5000/level/6/vault-api/FUZZ \
+  -fc 404
 
 # ── Phase 2: Fuzz parameters on the interesting endpoint ────
-wfuzz -z range,1-??? --hc 404 --hw ??? \
+seq 1 95 &gt; nums.txt
+ffuf -w nums.txt \
   -H "X-Vault-Token: &lt;CRACKED_PASSWORD&gt;" \
-  "http://&lt;TARGET&gt;:5000/level/6/vault-api/&lt;ENDPOINT&gt;?doc_id=FUZZ"
+  -u "http://&lt;TARGET&gt;:5000/level/6/vault-api/&lt;ENDPOINT&gt;?doc_id=FUZZ" \
+  -fw ???
 
 # ── Key Flags ───────────────────────────────────────────────
-#   -w &lt;file&gt;        Use a wordlist file
-#   -z range,N-M     Generate numbers from N to M
+#   -w &lt;file&gt;        Wordlist file (payloads replace FUZZ)
+#   -u &lt;url&gt;         Target URL with FUZZ keyword
 #   FUZZ             Placeholder replaced by each payload
-#   --hc CODE        Hide responses with this HTTP status code
-#   --hw WORDS       Hide responses with this word count
-#   --hh CHARS       Hide responses with this char count
+#   -fc CODE         Filter (hide) responses by HTTP status code
+#   -fw WORDS        Filter (hide) responses by word count
+#   -fs SIZE         Filter (hide) responses by response size
 #   -H "Key: Val"    Add custom HTTP header to each request</pre>
         </div>
     </div>
@@ -77,7 +80,7 @@ wfuzz -z range,1-??? --hc 404 --hw ??? \
 <div class="nx-card nx-card--accent" style="margin-top:1.5rem;">
     <h3 class="nx-card-title">API Endpoint Tester</h3>
     <p style="font-size:0.82rem; color:var(--nx-text); margin-bottom:1rem;">
-        Manually test individual API endpoints before running WFUZZ.
+        Manually test individual API endpoints before running ffuf.
     </p>
     <form id="api-test-form">
         <div class="nx-input-group">

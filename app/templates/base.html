@@ -46,12 +46,12 @@
 
     <!-- Main content -->
     <main class="nexus-main">
+        {% block content %}{% endblock %}
         {% if request.path.startswith('/level/') %}
-        <div class="nx-back-bar">
-            <a href="{{ url_for('challenges') }}" class="nx-back-link">&larr; Back to Challenges</a>
+        <div class="nx-back-footer">
+            <a href="{{ url_for('challenges') }}" class="nx-back-challenge-btn">&larr; Back to Challenges</a>
         </div>
         {% endif %}
-        {% block content %}{% endblock %}
     </main>
 
     <!-- Footer -->

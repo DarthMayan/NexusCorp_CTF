@@ -58,7 +58,9 @@ body {
 /* ── NAV ────────────────────────────────────────────────── */
 .nexus-nav {
     position: sticky; top: 0; z-index: 100;
-    display: flex; align-items: center; justify-content: space-between;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     padding: 0.8rem 2rem;
     background: rgba(10,10,15,0.92);
     backdrop-filter: blur(12px);
@@ -105,24 +107,42 @@ body {
     padding: 2rem 1.5rem 4rem;
 }
 
-.nx-back-bar {
-    margin-bottom: 1.25rem;
-}
-.nx-back-link {
+/* Level pages — "Back to Challenges" (badge / LEVEL style, orange, large) */
+.nx-back-challenge-btn {
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
-    font-family: var(--nx-font-mono);
-    font-size: 0.78rem;
-    font-weight: 500;
-    color: var(--nx-accent);
-    text-decoration: none;
-    letter-spacing: 0.04em;
+    justify-content: center;
+    gap: 0.45rem;
+    font-family: var(--nx-font-display);
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
+    text-decoration: none;
+    color: var(--nx-orange);
+    background: rgba(255, 140, 0, 0.12);
+    border: 1px solid rgba(255, 140, 0, 0.55);
+    border-radius: 2px;
+    padding: 0.55rem 1.15rem 0.55rem 0.95rem;
+    box-shadow: 0 0 18px rgba(255, 140, 0, 0.12);
+    transition: color 0.2s, background 0.2s, border-color 0.2s, box-shadow 0.2s;
 }
-.nx-back-link:hover {
-    color: var(--nx-text-bright);
-    text-decoration: underline;
+.nx-back-challenge-btn:hover {
+    color: #ffcc80;
+    background: rgba(255, 140, 0, 0.22);
+    border-color: rgba(255, 180, 80, 0.75);
+    box-shadow: 0 0 22px rgba(255, 140, 0, 0.22);
+}
+
+.nx-back-footer {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--nx-border);
+    text-align: center;
+}
+.nx-back-footer .nx-back-challenge-btn {
+    font-size: 1.05rem;
+    padding: 0.65rem 1.4rem 0.65rem 1.15rem;
 }
 
 /* ── TYPOGRAPHY ──────────────────────────────────────────── */
