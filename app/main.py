@@ -1078,9 +1078,9 @@ def level6_api(endpoint):
 
 HINTS = {
     1: [
-        "The employee portal has very common credentials. Try the classics.",
-        "Hydra can brute-force HTTP POST forms. Check the form field names.",
-        "hydra -l admin -P /usr/share/wordlists/rockyou.txt <target> http-post-form '...'",
+        "The employee portal has very common credentials. Think: what would a lazy sysadmin use?",
+        "Use Hydra with a SHORT custom wordlist — long wordlists hit connection limits. Create one with the 10 most common passwords.",
+        "hydra -l admin -P wordlist.txt TARGET https-post-form '/level/1/login:username=^USER^&password=^PASS^:S=Administrator' -V -t 1 -f",
     ],
     2: [
         "The search field doesn't sanitize input. Classic SQL injection territory.",
