@@ -313,9 +313,13 @@ def init_databases():
 
 @app.before_request
 def before_request_handler():
-    limit = RATE_LIMIT_FUZZ if request.path.startswith("/level/6/vault-api") else RATE_LIMIT
-    if rate_limited(limit):
-        return jsonify({"error": "Rate limit exceeded. Try again shortly."}), 429
+    # Level 1 login is intentionally brute-forceable — skip rate limiting
+    if request.path == "/level/1/login":
+        pass
+    else:
+        limit = RATE_LIMIT_FUZZ if request.path.startswith("/level/6/vault-api") else RATE_LIMIT
+        if rate_limited(limit):
+            return jsonify({"error": "Rate limit exceeded. Try again shortly."}), 429
 
     # Log attack-relevant requests
     if request.method == "POST" and request.path not in ("/register", "/team-login"):
@@ -503,7 +507,7 @@ def level1_login():
                        "But you need Administrator access for the flag."
         })
 
-    return jsonify({"success": False, "message": "Login failed. Invalid credentials."}), 401
+    return jsonify({"success": False, "message": "Login failed. Invalid credentials."}), 200
 
 
 # ---------------------------------------------------------------------------
