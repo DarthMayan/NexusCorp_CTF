@@ -265,7 +265,7 @@ def init_databases():
          "Security", "Automated Scanner", 3),
         ("cn=Vault Access,ou=System,dc=nexuscorp,dc=local",
          "Vault Service", "vault_svc", "vault@nexuscorp.local",
-         hashlib.sha256(b"V4ult_M4st3r_K3y!").hexdigest(),
+         hashlib.sha256(b"dragon").hexdigest(),
          "System", "Vault Access Service Account", 5),
     ]
     for entry in ldap_entries:
@@ -943,7 +943,7 @@ def level5_ldap():
 # LEVEL 6 – Vault API Fuzzing (ffuf)
 # ---------------------------------------------------------------------------
 
-VAULT_API_TOKEN = "V4ult_M4st3r_K3y!"
+VAULT_API_TOKEN = "dragon"
 
 VAULT_API_WORDLIST = [
     "status", "health", "config", "logs", "backup", "archives",

