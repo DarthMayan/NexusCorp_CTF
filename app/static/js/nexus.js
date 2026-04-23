@@ -45,7 +45,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 const container = btn.closest(".hint-box");
                 const textEl = container.querySelector(".hint-text");
                 if (json.hint) {
-                    textEl.textContent = `Hint ${hintNum + 1}: ${json.hint}`;
+                    const line = document.createElement("p");
+                    line.style.margin = "0.4rem 0 0";
+                    line.textContent = `Hint ${hintNum + 1}: ${json.hint}`;
+                    textEl.appendChild(line);
                     textEl.style.display = "block";
                     btn.dataset.hintNum = hintNum + 1;
                     if (hintNum + 1 >= json.total) {
@@ -53,7 +56,10 @@ document.addEventListener("DOMContentLoaded", () => {
                         btn.textContent = "No more hints";
                     }
                 } else {
-                    textEl.textContent = "No more hints available.";
+                    const line = document.createElement("p");
+                    line.style.margin = "0.4rem 0 0";
+                    line.textContent = "No more hints available.";
+                    textEl.appendChild(line);
                     textEl.style.display = "block";
                 }
             } catch {

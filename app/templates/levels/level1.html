@@ -11,36 +11,16 @@
 <div class="briefing">
     <p>
         NEXUS Corp's employee portal is the first line of defense. Intelligence suggests that some employees
-        are using <strong>extremely weak passwords</strong>. Your objective: gain <strong>Administrator</strong> access.
+        are using <strong>extremely weak passwords</strong>. 
     </p>
     <p>
-        The login endpoint accepts POST requests at <code>/level/1/login</code> with fields
-        <code>username</code> and <code>password</code>. Successful admin login reveals the flag.
+        <strong>Your objective:</strong> gain Administrator access.
     </p>
     <p>
-        Use <strong>Hydra</strong> to brute-force the login. Since the target runs behind a tunnel,
-        create a <strong>short custom wordlist</strong> with the most common weak passwords —
-        wordlists with millions of entries will hit connection limits before finding the answer.
+        The login endpoint accepts <code>POST</code> requests at <code>/level/1/login</code> with fields
+        <code>username</code> and <code>password</code>. A successful Administrator login reveals the flag.
     </p>
-    <div style="margin-top:0.8rem; padding:0.8rem; background:rgba(0,240,255,0.05); border:1px solid var(--nx-accent-dim); border-radius:var(--nx-radius); font-family:var(--nx-font-mono); font-size:0.78rem;">
-        <span style="color:var(--nx-accent);"># Step 1 — Create your wordlist</span><br>
-        cat &gt; wordlist.txt &lt;&lt; 'EOF'<br>
-        123456<br>
-        password<br>
-        12345<br>
-        qwerty<br>
-        letmein<br>
-        admin<br>
-        welcome<br>
-        monkey<br>
-        dragon<br>
-        master<br>
-        EOF<br><br>
-        <span style="color:var(--nx-accent);"># Step 2 — Launch the attack</span><br>
-        hydra -l admin -P wordlist.txt TARGET https-post-form<br>
-        &nbsp;&nbsp;"/level/1/login:username=^USER^&amp;password=^PASS^:S=Administrator"<br>
-        &nbsp;&nbsp;-V -t 1 -f
-    </div>
+
 </div>
 
 <!-- The actual vulnerable login form -->
