@@ -104,6 +104,75 @@
     </a>
 </div>
 
+{% if solved|length == total_levels %}
+<!-- ── MISSION COMPLETE MODAL ────────────────────────────── -->
+<div id="mission-modal-backdrop" style="position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:1000; display:flex; align-items:center; justify-content:center; padding:1.5rem;">
+    <div style="position:relative; background:var(--nx-bg-card); border:2px solid var(--nx-green); border-radius:var(--nx-radius); max-width:680px; width:100%; max-height:88vh; overflow-y:auto; padding:2rem;">
+
+        <!-- Animated top bar -->
+        <div style="position:absolute; top:0; left:0; width:100%; height:4px; background:linear-gradient(90deg, var(--nx-accent), var(--nx-green), var(--nx-accent)); background-size:200%; animation:nx-slide 3s linear infinite; border-radius:var(--nx-radius) var(--nx-radius) 0 0;"></div>
+
+        <!-- Close button -->
+        <button onclick="document.getElementById('mission-modal-backdrop').style.display='none'"
+                style="position:absolute; top:0.9rem; right:1rem; background:none; border:none; color:var(--nx-text-dim); font-size:1.4rem; cursor:pointer; line-height:1; font-family:var(--nx-font-mono);"
+                title="Close">✕</button>
+
+        <!-- Header -->
+        <p style="font-family:var(--nx-font-mono); font-size:0.7rem; color:var(--nx-green); letter-spacing:0.15em; margin:0.5rem 0 0.4rem;">// OPERATION NEXUS — CLOSED</p>
+        <h2 style="font-family:var(--nx-font-display); font-size:1.7rem; color:var(--nx-green); margin:0 0 0.3rem; text-transform:uppercase; letter-spacing:0.05em;">Mission Complete</h2>
+        <p style="font-family:var(--nx-font-mono); font-size:0.9rem; color:var(--nx-accent); margin:0 0 1.5rem;">Excellent work, <strong>{{ team_name }}</strong>.</p>
+
+        <!-- Body -->
+        <div style="font-family:var(--nx-font-mono); font-size:0.82rem; line-height:1.9; color:var(--nx-text);">
+            <p>
+                All six sectors of <strong style="color:var(--nx-accent);">NEXUS Corp</strong> have been breached.
+                The intelligence gathered across this operation has been compiled and transmitted
+                to federal authorities under <strong>Operation Chimera</strong>.
+            </p>
+            <p style="margin-top:1rem;">The evidence chain you built tells the full story:</p>
+            <ul style="margin:0.8rem 0 0 1.2rem; padding:0; list-style:none;">
+                <li style="margin-bottom:0.4rem;"><span style="color:var(--nx-accent);">01 →</span> Portal access was obtained through negligent credential management.</li>
+                <li style="margin-bottom:0.4rem;"><span style="color:var(--nx-accent);">02 →</span> An unprotected HR database exposed internal server credentials via SQL injection.</li>
+                <li style="margin-bottom:0.4rem;"><span style="color:var(--nx-accent);">03 →</span> Weak password hashing allowed recovery of plaintext system passwords in minutes.</li>
+                <li style="margin-bottom:0.4rem;"><span style="color:var(--nx-accent);">04 →</span> SSH access to the internal server revealed LDAP admin credentials left in a backup file.</li>
+                <li style="margin-bottom:0.4rem;"><span style="color:var(--nx-accent);">05 →</span> LDAP enumeration exposed a privileged service account and its hashed password.</li>
+                <li style="margin-bottom:0.4rem;"><span style="color:var(--nx-accent);">06 →</span> An undocumented vault API was fuzzed to extract <em>Project Chimera</em> financial documents — classified evidence of large-scale corporate fraud.</li>
+            </ul>
+
+            <p style="margin-top:1.5rem; padding:0.8rem 1rem; background:rgba(0,240,255,0.05); border-left:3px solid var(--nx-accent); border-radius:0 var(--nx-radius) var(--nx-radius) 0;">
+                <strong style="color:var(--nx-accent);">Arrests — 48 hours after report filed:</strong>
+            </p>
+            <ul style="margin:0.6rem 0 0 1.2rem; padding:0; list-style:none;">
+                <li style="margin-bottom:0.35rem;"><span style="color:var(--nx-red);">▸</span> <strong>Elena Voss</strong> — CEO. Architect of Project Chimera. Charged with corporate fraud and misappropriation of funds.</li>
+                <li style="margin-bottom:0.35rem;"><span style="color:var(--nx-red);">▸</span> <strong>Sarah Mitchell</strong> — CFO. Managed the flow of illicit funds across shell accounts documented in the vault.</li>
+                <li style="margin-bottom:0.35rem;"><span style="color:var(--nx-red);">▸</span> <strong>Marcus Chen</strong> — CTO. Ordered the purge of API documentation to prevent discovery of the vault system.</li>
+                <li style="margin-bottom:0.35rem;"><span style="color:var(--nx-red);">▸</span> <strong>David Park</strong> — VP Engineering. Designed and deployed the hidden vault API outside of audited infrastructure.</li>
+                <li style="margin-bottom:0.35rem;"><span style="color:var(--nx-red);">▸</span> <strong>Nina Kowalski</strong> — HR Director. Concealed ghost employees used to launder operational costs through payroll.</li>
+            </ul>
+
+            <p style="margin-top:1rem; padding:0.8rem 1rem; background:rgba(0,240,255,0.05); border-left:3px solid var(--nx-accent); border-radius:0 var(--nx-radius) var(--nx-radius) 0; font-size:0.8rem; color:var(--nx-text-dim);">
+                NEXUS Corp's servers were seized and all accounts frozen pending trial.
+                The operative's identity remains classified.
+            </p>
+            <p style="margin-top:1rem; color:var(--nx-text-dim); font-size:0.75rem;">
+                Sectors breached: <strong style="color:var(--nx-green);">6 / 6</strong> &nbsp;·&nbsp;
+                Operative: <strong style="color:var(--nx-green);">{{ team_name }}</strong> &nbsp;·&nbsp;
+                Status: <strong style="color:var(--nx-green);">EXFIL COMPLETE</strong>
+            </p>
+        </div>
+
+        <!-- Close button bottom -->
+        <div style="margin-top:1.5rem; text-align:center;">
+            <button onclick="document.getElementById('mission-modal-backdrop').style.display='none'"
+                    class="nx-btn nx-btn--green">Close Debrief</button>
+        </div>
+    </div>
+</div>
+<style>
+@keyframes nx-slide { from { background-position: 0% 0%; } to { background-position: 200% 0%; } }
+</style>
+{% endif %}
+
 <!-- Flag submission -->
 <div class="nx-card nx-card--accent" style="margin-top:2rem;">
     <h3 class="nx-card-title">Submit Flag</h3>
