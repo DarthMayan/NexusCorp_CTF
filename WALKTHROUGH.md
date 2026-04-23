@@ -71,8 +71,8 @@ The flag must be submitted manually — it's not auto-returned by SQLi.
 
 **Solution:** Crack the MD5 hash for the `sysop` account.
 
-**Hash:** `98ae336a33cb54a3d5effde7f32c06c8`
-**Password:** `Op3r4t0r!`
+**Hash:** `eb0a191797624dd3a48fa681d3061212`
+**Password:** `master`
 
 **With Hashcat:**
 ```bash
@@ -87,7 +87,7 @@ echo "5b09b6e080c821e463c2b48bc81540f3" > hash.txt
 john --format=raw-md5 hash.txt --wordlist=/usr/share/wordlists/rockyou.txt
 ```
 
-Submit `Op3r4t0r!` at `/level/3/verify` to get the flag.
+Submit `master` at `/level/3/verify` to get the flag.
 
 ---
 
@@ -95,10 +95,10 @@ Submit `Op3r4t0r!` at `/level/3/verify` to get the flag.
 
 **Flag:** `NEXUS{ssh_tun3l_r4t_1n_th3_w4lls_2c8f}`
 
-**Solution:** SSH into the simulated server with `sysop:Op3r4t0r!` and explore.
+**Solution:** SSH into the simulated server with `sysop:master` and explore.
 
 **Steps:**
-1. Login with `sysop` / `Op3r4t0r!`
+1. Login with `sysop` / `master`
 2. Explore with these commands:
 ```bash
 ls                          # List home directory

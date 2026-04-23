@@ -229,7 +229,7 @@ def init_databases():
     # Always wipe and reseed to prevent duplicate rows on each restart
     c.execute("DELETE FROM ssh_credentials")
     ssh_creds = [
-        ("nexus-internal-srv", "sysop",  hashlib.md5(b"Op3r4t0r!").hexdigest(),       "Main server – DO NOT SHARE", FLAGS[2]),
+        ("nexus-internal-srv", "sysop",  hashlib.md5(b"master").hexdigest(),           "Main server – DO NOT SHARE", FLAGS[2]),
         ("nexus-backup-srv",   "backup", hashlib.md5(b"B4ckup2024").hexdigest(),       "Nightly backup account",     None),
         ("nexus-dev-srv",      "devops", hashlib.sha256(b"D3v0ps#Acc3ss").hexdigest(), "CI/CD pipeline",             None),
     ]
@@ -580,13 +580,13 @@ def level3():
 def level3_verify():
     """Verify cracked password for the sysop account."""
     password = request.form.get("password", "")
-    # The MD5 of 'Op3r4t0r!' should have been found in ssh_credentials table
-    if password == "Op3r4t0r!":
+    # The MD5 of 'master' should have been found in ssh_credentials table
+    if password == "master":
         return jsonify({
             "success": True,
             "flag": FLAGS[3],
             "message": "Password verified! SSH access to nexus-internal-srv as 'sysop' granted.",
-            "hint": "Connect to the SSH service at /level/4. Use sysop:Op3r4t0r!"
+            "hint": "Connect to the SSH service at /level/4. Use sysop:master"
         })
     return jsonify({"success": False, "message": "Incorrect password. Keep cracking."}), 403
 
@@ -729,7 +729,7 @@ def level4_ssh():
     username = request.form.get("username", "")
     password = request.form.get("password", "")
 
-    if username == "sysop" and password == "Op3r4t0r!":
+    if username == "sysop" and password == "master":
         session["ssh_authenticated"] = True
         return jsonify({
             "success": True,
