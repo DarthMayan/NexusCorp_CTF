@@ -11,15 +11,15 @@
 <div class="briefing">
     <p>
         You've breached the portal. Now you're inside the <strong>HR employee records system</strong>.
-        The search function queries the database directly. It looks like the developers forgot to sanitize input...
+        The search function queries the database directly.
     </p>
     <p>
-        Search endpoint: <code>POST /level/2/search</code> with field <code>search</code>.
-        Also accessible via <code>GET /level/2/search?search=VALUE</code> for sqlmap compatibility.
+        Search endpoint: <code>POST /level/2/search</code> with field <code>search</code>
+        (also accepts <code>GET /level/2/search?search=VALUE</code>).
     </p>
     <p>
-        <strong>Objective:</strong> Enumerate the database. There are hidden tables with sensitive credentials.
-        Find the <code>ssh_credentials</code> table and extract the password hashes.
+        <strong>Objective:</strong> Enumerate the database and extract hidden credentials.
+        If you get stuck, request intel below.
     </p>
 </div>
 

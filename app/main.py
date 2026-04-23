@@ -181,8 +181,9 @@ def init_databases():
             pass
 
     # Level 2: Internal HR database (SQL injection target)
+    c.execute("DROP TABLE IF EXISTS hr_employees")
     c.execute("""
-        CREATE TABLE IF NOT EXISTS hr_employees (
+        CREATE TABLE hr_employees (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             emp_id TEXT,
             full_name TEXT,
@@ -208,10 +209,7 @@ def init_databases():
         ("NX-1012", "Kevin Tanaka",     "Sys Admin",              125000, "IT",         "2019-04-18"),
     ]
     for emp in hr_data:
-        try:
-            c.execute("INSERT INTO hr_employees VALUES (NULL,?,?,?,?,?,?)", emp)
-        except sqlite3.IntegrityError:
-            pass
+        c.execute("INSERT INTO hr_employees VALUES (NULL,?,?,?,?,?,?)", emp)
 
     # SECRET table hidden in the DB – players discover it via SQLi
     c.execute("DROP TABLE IF EXISTS ssh_credentials")
@@ -1090,9 +1088,9 @@ HINTS = {
     ],
     2: [
         "The search field doesn't sanitize input. Classic SQL injection territory.",
-        "Try: ' OR 1=1 -- to see all employees.",
-        "Use sqlmap to enumerate tables. There's more than just hr_employees...",
-        "sqlmap -u '<url>' --data='search=test' --dbs --tables",
+        "Try entering: ' OR 1=1 -- in the search box to see what happens.",
+        "There are more tables than what's visible. Use a tool to enumerate the full schema.",
+        "sqlmap -u 'TARGET/level/2/search?search=test' --dbms=sqlite --delay=2 --tables --batch",
     ],
     3: [
         "You found hashes in the ssh_credentials table. Identify the hash type first.",
