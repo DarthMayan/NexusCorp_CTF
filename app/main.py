@@ -214,26 +214,27 @@ def init_databases():
             pass
 
     # SECRET table hidden in the DB – players discover it via SQLi
+    c.execute("DROP TABLE IF EXISTS ssh_credentials")
     c.execute("""
-        CREATE TABLE IF NOT EXISTS ssh_credentials (
+        CREATE TABLE ssh_credentials (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             hostname TEXT,
             username TEXT,
             password_hash TEXT,
-            notes TEXT
+            notes TEXT,
+            flag TEXT
         )
     """)
 
+    # Always wipe and reseed to prevent duplicate rows on each restart
+    c.execute("DELETE FROM ssh_credentials")
     ssh_creds = [
-        ("nexus-internal-srv", "sysop",   hashlib.md5(b"Op3r4t0r!").hexdigest(),  "Main server – DO NOT SHARE"),
-        ("nexus-backup-srv",   "backup",  hashlib.md5(b"B4ckup2024").hexdigest(),  "Nightly backup account"),
-        ("nexus-dev-srv",      "devops",  hashlib.sha256(b"D3v0ps#Acc3ss").hexdigest(), "CI/CD pipeline"),
+        ("nexus-internal-srv", "sysop",  hashlib.md5(b"Op3r4t0r!").hexdigest(),       "Main server – DO NOT SHARE", FLAGS[2]),
+        ("nexus-backup-srv",   "backup", hashlib.md5(b"B4ckup2024").hexdigest(),       "Nightly backup account",     None),
+        ("nexus-dev-srv",      "devops", hashlib.sha256(b"D3v0ps#Acc3ss").hexdigest(), "CI/CD pipeline",             None),
     ]
     for cred in ssh_creds:
-        try:
-            c.execute("INSERT INTO ssh_credentials VALUES (NULL,?,?,?,?)", cred)
-        except sqlite3.IntegrityError:
-            pass
+        c.execute("INSERT INTO ssh_credentials (hostname, username, password_hash, notes, flag) VALUES (?,?,?,?,?)", cred)
 
     # Level 5: LDAP-style directory (simulated as SQL table)
     c.execute("""
@@ -313,9 +314,13 @@ def init_databases():
 
 @app.before_request
 def before_request_handler():
-    limit = RATE_LIMIT_FUZZ if request.path.startswith("/level/6/vault-api") else RATE_LIMIT
-    if rate_limited(limit):
-        return jsonify({"error": "Rate limit exceeded. Try again shortly."}), 429
+    # Level 1 login is intentionally brute-forceable — skip rate limiting
+    if request.path == "/level/1/login":
+        pass
+    else:
+        limit = RATE_LIMIT_FUZZ if request.path.startswith("/level/6/vault-api") else RATE_LIMIT
+        if rate_limited(limit):
+            return jsonify({"error": "Rate limit exceeded. Try again shortly."}), 429
 
     # Log attack-relevant requests
     if request.method == "POST" and request.path not in ("/register", "/team-login"):
@@ -503,7 +508,7 @@ def level1_login():
                        "But you need Administrator access for the flag."
         })
 
-    return jsonify({"success": False, "message": "Login failed. Invalid credentials."}), 401
+    return jsonify({"success": False, "message": "Login failed. Invalid credentials."}), 200
 
 
 # ---------------------------------------------------------------------------
@@ -1074,9 +1079,9 @@ def level6_api(endpoint):
 
 HINTS = {
     1: [
-        "The employee portal has very common credentials. Try the classics.",
-        "Hydra can brute-force HTTP POST forms. Check the form field names.",
-        "hydra -l admin -P /usr/share/wordlists/rockyou.txt <target> http-post-form '...'",
+        "The employee portal has very common credentials. Think: what would a lazy sysadmin use?",
+        "Use Hydra with a SHORT custom wordlist — long wordlists hit connection limits. Create one with the 10 most common passwords.",
+        "hydra -l admin -P wordlist.txt TARGET https-post-form '/level/1/login:username=^USER^&password=^PASS^:S=Administrator' -V -t 1 -f",
     ],
     2: [
         "The search field doesn't sanitize input. Classic SQL injection territory.",

