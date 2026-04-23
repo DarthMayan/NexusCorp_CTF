@@ -275,8 +275,9 @@ def init_databases():
             pass
 
     # Level 6: CEO Vault
+    c.execute("DROP TABLE IF EXISTS ceo_vault")
     c.execute("""
-        CREATE TABLE IF NOT EXISTS ceo_vault (
+        CREATE TABLE ceo_vault (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             document_name TEXT,
             classification TEXT,
@@ -298,10 +299,7 @@ def init_databases():
          "Monitoring employee communications without consent since 2021."),
     ]
     for doc in vault_docs:
-        try:
-            c.execute("INSERT INTO ceo_vault VALUES (NULL,?,?,?,NULL,NULL)", doc)
-        except sqlite3.IntegrityError:
-            pass
+        c.execute("INSERT INTO ceo_vault (document_name, classification, content) VALUES (?,?,?)", doc)
 
     conn.commit()
     conn.close()
