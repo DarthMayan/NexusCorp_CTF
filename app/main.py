@@ -1104,10 +1104,10 @@ HINTS = {
         "cat /tmp/debug_dump.txt",
     ],
     5: [
-        "LDAP anonymous bind is enabled. Try connecting without credentials.",
-        "Search for all entries: filter=(objectClass=*)",
-        "You found admin credentials in Level 4. Use them to see password hashes.",
-        "Focus on vault_svc — it has clearance_level=5.",
+        "LDAP often allows unauthenticated access. Try leaving the credentials blank.",
+        "Enumerate all directory entries with a broad search filter, then look for service accounts.",
+        "You found admin credentials in Level 4. Binding as admin exposes more attributes.",
+        "The account you need has vault clearance — look for attributes that hint at access level or tokens.",
     ],
     6: [
         "The vault API authenticates via an X-Vault-Token header. Use the cracked vault_svc password.",

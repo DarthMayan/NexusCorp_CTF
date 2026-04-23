@@ -10,17 +10,12 @@
 
 <div class="briefing">
     <p>
-        From the SSH session, you discovered that the LDAP server has <strong>anonymous bind enabled</strong>.
-        The admin credentials were also found in <code>/etc/nexus/backup.key</code>.
+        The internal LDAP directory service is exposed on the network.
+        Explore it to map out accounts and extract useful attributes.
     </p>
     <p>
-        Use LDAP queries to enumerate the directory and find the <strong>vault_svc</strong> service account.
-        You need its password hash to access the CEO vault in Level 6.
-    </p>
-    <p>
-        Admin bind DN: <code>cn=admin,dc=nexuscorp,dc=local</code><br>
-        Admin password: found in Level 4 filesystem.
-        Authenticating as admin reveals password hashes and the flag.
+        <strong>Objective:</strong> Find a service account with vault access and recover its credentials.
+        If you get stuck, request intel.
     </p>
 </div>
 
