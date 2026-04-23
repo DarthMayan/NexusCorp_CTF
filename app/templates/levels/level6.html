@@ -10,14 +10,13 @@
 
 <div class="briefing">
     <p>
-        From the LDAP directory, you recovered the <strong>vault_svc</strong> service account
-        and cracked its SHA256 password hash: <code>V4ult_M4st3r_K3y!</code>.
-        This account has <strong>clearance_level 5</strong> — the highest in the organization.
+        With the <strong>vault_svc</strong> credentials you obtained from Level 5, you now have
+        access to the highest clearance level in the organization.
     </p>
     <p>
-        Intelligence reports indicate the CEO Vault operates through a <strong>hidden REST API</strong>,
-        but all internal documentation has been purged after a security audit.
-        The API base URL and authentication method were found in the server logs during SSH exploration:
+        Intelligence indicates the CEO Vault operates through a <strong>hidden REST API</strong>,
+        but all documentation was purged after a security audit. A fragment recovered from the
+        server logs during your SSH session points to where the API lives:
     </p>
     <div class="nx-terminal" style="margin:1rem 0;">
         <div class="nx-terminal-header">
@@ -33,47 +32,12 @@
         </div>
     </div>
     <p>
-        Your mission: use <strong>ffuf</strong> to discover the API's hidden endpoints and
-        locate the classified CEO documents. A partial list of NEXUS Corp internal API endpoint
-        names was recovered from a deleted configuration backup —
+        <strong>Objective:</strong> Fuzz the API to discover its hidden endpoints and locate the
+        classified CEO documents. A partial list of internal API names recovered from a deleted
+        backup may help —
         <a href="/level/6/api-wordlist.txt" target="_blank" style="color:var(--nx-accent);">download the wordlist here</a>.
+        If you get stuck, request intel.
     </p>
-</div>
-
-<!-- ffuf Command Reference -->
-<div class="nx-card nx-card--red">
-    <h3 class="nx-card-title">ffuf Attack Briefing</h3>
-    <div class="nx-terminal">
-        <div class="nx-terminal-header">
-            <span class="nx-terminal-dot nx-terminal-dot--red"></span>
-            <span class="nx-terminal-dot nx-terminal-dot--yellow"></span>
-            <span class="nx-terminal-dot nx-terminal-dot--green"></span>
-            <span class="nx-terminal-title">ffuf reference</span>
-        </div>
-        <div class="nx-terminal-body">
-<pre style="color:var(--nx-red);"># ── Phase 1: Discover hidden API endpoints ──────────────────
-ffuf -w ./api-wordlist.txt \
-  -H "X-Vault-Token: &lt;CRACKED_PASSWORD&gt;" \
-  -u http://&lt;TARGET&gt;:5000/level/6/vault-api/FUZZ \
-  -fc 404
-
-# ── Phase 2: Fuzz parameters on the interesting endpoint ────
-seq 1 95 &gt; nums.txt
-ffuf -w nums.txt \
-  -H "X-Vault-Token: &lt;CRACKED_PASSWORD&gt;" \
-  -u "http://&lt;TARGET&gt;:5000/level/6/vault-api/&lt;ENDPOINT&gt;?doc_id=FUZZ" \
-  -fw ???
-
-# ── Key Flags ───────────────────────────────────────────────
-#   -w &lt;file&gt;        Wordlist file (payloads replace FUZZ)
-#   -u &lt;url&gt;         Target URL with FUZZ keyword
-#   FUZZ             Placeholder replaced by each payload
-#   -fc CODE         Filter (hide) responses by HTTP status code
-#   -fw WORDS        Filter (hide) responses by word count
-#   -fs SIZE         Filter (hide) responses by response size
-#   -H "Key: Val"    Add custom HTTP header to each request</pre>
-        </div>
-    </div>
 </div>
 
 <!-- API Endpoint Tester -->

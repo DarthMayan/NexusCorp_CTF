@@ -1110,11 +1110,11 @@ HINTS = {
         "The account you need has vault clearance — look for attributes that hint at access level or tokens.",
     ],
     6: [
-        "The vault API authenticates via an X-Vault-Token header. Use the cracked vault_svc password.",
-        "Phase 1: ffuf -w wordlist.txt -H 'X-Vault-Token: ...' -u http://TARGET/level/6/vault-api/FUZZ -fc 404",
-        "Look at the 'archives' endpoint response — it tells you how many documents exist.",
-        "Phase 2: Generate seq 1 95 > nums.txt, then ffuf with -fw to hide the common word count.",
-        "The logs endpoint has a breadcrumb — check which doc_id was recently retrieved.",
+        "The API uses token-based authentication. Check the log fragment — it tells you the header name.",
+        "Use ffuf with the wordlist to fuzz endpoint names. Filter out 404 responses to find what exists.",
+        "One endpoint lists available documents and tells you how many there are — fuzz its parameters next.",
+        "Another endpoint records recent API activity. It may reveal which document was recently accessed.",
+        "Use -fw to filter responses by word count so only the interesting ones stand out.",
     ],
 }
 
