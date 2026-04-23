@@ -738,7 +738,7 @@ def level4_ssh():
             "success": True,
             "message": (
                 "Linux nexus-internal-srv 5.15.0 #1 SMP x86_64 GNU/Linux\n"
-                "Last login: Fri Mar 15 02:14:35 2024 from 10.0.1.10\n"
+                f"Last login: {__import__('datetime').datetime.now().strftime('%a %b %d %H:%M:%S %Y')} from 10.0.1.10\n"
                 "sysop@nexus-internal-srv:~$ "
             )
         })
@@ -835,7 +835,7 @@ def level4_cmd():
 
     elif command == "exit":
         session.pop("ssh_authenticated", None)
-        output = "Connection to nexus-internal-srv closed."
+        output = "__DISCONNECT__"
 
     else:
         output = f"-bash: {command}: command not found"
@@ -1098,10 +1098,10 @@ HINTS = {
         "hashcat -m 0 hash.txt /usr/share/wordlists/rockyou.txt  (mode 0 = MD5)",
     ],
     4: [
-        "You're logged into the server as sysop. Explore the filesystem.",
-        "Check .bash_history, notes.txt, and config files for clues.",
-        "The flag is hidden in one of the files. Use 'cat' and 'find' to explore.",
-        "Look for LDAP configuration — you'll need it for Level 5.",
+        "Start by listing the home directory. Look for readable files.",
+        "Check hidden files and history files — admins leave traces.",
+        "Explore system config directories. The flag is inside one of the files.",
+        "cat /tmp/debug_dump.txt",
     ],
     5: [
         "LDAP anonymous bind is enabled. Try connecting without credentials.",

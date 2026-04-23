@@ -113,6 +113,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 if (json.output === "__CLEAR__") {
                     termBody.innerHTML = "";
+                } else if (json.output === "__DISCONNECT__") {
+                    appendTerminal("Connection to nexus-internal-srv closed.", "output");
+                    setTimeout(() => {
+                        document.getElementById("ssh-terminal-card").style.display = "none";
+                        const loginCard = document.getElementById("ssh-login-card");
+                        loginCard.style.display = "block";
+                        document.getElementById("ssh-terminal-body").innerHTML = "";
+                        document.getElementById("ssh-login-result").style.display = "none";
+                    }, 1000);
                 } else {
                     appendTerminal(json.output, "output");
                 }
