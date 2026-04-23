@@ -1093,10 +1093,9 @@ HINTS = {
         "sqlmap -u 'TARGET/level/2/search?search=test' --dbms=sqlite --delay=2 --tables --batch",
     ],
     3: [
-        "You found hashes in the ssh_credentials table. Identify the hash type first.",
-        "MD5 hashes are 32 hex characters. SHA256 are 64.",
-        "hashcat -m 0 hash.txt /usr/share/wordlists/rockyou.txt   (mode 0 = MD5)",
-        "john --format=raw-md5 hash.txt --wordlist=/usr/share/wordlists/rockyou.txt",
+        "Look at the length of each hash — it tells you which algorithm was used.",
+        "Use a password cracking tool with a large wordlist. Focus on the sysop account.",
+        "hashcat -m 0 hash.txt /usr/share/wordlists/rockyou.txt  (mode 0 = MD5)",
     ],
     4: [
         "You're logged into the server as sysop. Explore the filesystem.",

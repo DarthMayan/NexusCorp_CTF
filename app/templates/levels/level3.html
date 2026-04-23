@@ -10,13 +10,12 @@
 
 <div class="briefing">
     <p>
-        From the SQL injection in Level 2, you discovered the <code>ssh_credentials</code> table
-        containing password hashes for internal servers. Your target is the <strong>sysop</strong>
-        account on <strong>nexus-internal-srv</strong>.
+        Your Level 2 investigation exposed password hashes stored in an internal server database.
+        These hashes belong to system accounts — crack them to obtain valid credentials.
     </p>
     <p>
-        The hash for sysop is an <strong>MD5</strong> hash (32 hex characters).
-        Use <code>hashcat</code> or <code>John the Ripper</code> with a wordlist to crack it.
+        <strong>Objective:</strong> Obtain the plaintext password for the <strong>sysop</strong> account
+        and submit it below to verify access. If you get stuck, request intel.
     </p>
 </div>
 
@@ -37,10 +36,6 @@
 +----+--------------------+----------+------------------------------------------------------------------+----------------------------+
 {% for row in creds %}| {{ "%-2d"|format(row.id) }} | {{ "%-18s"|format(row.hostname) }} | {{ "%-8s"|format(row.username) }} | {{ "%-64s"|format(row.password_hash) }} | {{ "%-26s"|format(row.notes) }} |
 {% endfor %}+----+--------------------+----------+------------------------------------------------------------------+----------------------------+
-
-Target: Crack the sysop MD5 hash (32 hex chars)
-Tool suggestion: hashcat -m 0 hash.txt /usr/share/wordlists/rockyou.txt
-            or: john --format=raw-md5 hash.txt --wordlist=/usr/share/wordlists/rockyou.txt
 </pre>
         </div>
     </div>
