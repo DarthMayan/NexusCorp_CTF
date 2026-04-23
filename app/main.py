@@ -571,8 +571,15 @@ def level3():
     They must crack the MD5/SHA256 hashes using hashcat or john.
     Submit the cracked password for sysop to get the flag.
     """
+    conn = sqlite3.connect(VULN_DB)
+    conn.row_factory = sqlite3.Row
+    creds = conn.execute(
+        "SELECT id, hostname, username, password_hash, notes FROM ssh_credentials ORDER BY id"
+    ).fetchall()
+    conn.close()
     return render_template("levels/level3.html",
-                           solved=3 in get_team_progress(session["team_id"]))
+                           solved=3 in get_team_progress(session["team_id"]),
+                           creds=creds)
 
 
 @app.route("/level/3/verify", methods=["POST"])

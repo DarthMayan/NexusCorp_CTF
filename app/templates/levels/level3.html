@@ -32,17 +32,15 @@
         </div>
         <div class="nx-terminal-body">
 <pre>
-+----+---------------------+----------+----------------------------------+------------------------------+
-| id | hostname            | username | password_hash                    | notes                        |
-+----+---------------------+----------+----------------------------------+------------------------------+
-| 1  | nexus-internal-srv  | sysop    | 5b09b6e080c821e463c2b48bc81540f3 | Main server – DO NOT SHARE   |
-| 2  | nexus-backup-srv    | backup   | a67c4d15c47b4899e4a71024acf4aaa2 | Nightly backup account       |
-| 3  | nexus-dev-srv       | devops   | (SHA256 — 64 chars)              | CI/CD pipeline               |
-+----+---------------------+----------+----------------------------------+------------------------------+
++----+--------------------+----------+------------------------------------------------------------------+----------------------------+
+| id | hostname           | username | password_hash                                                    | notes                      |
++----+--------------------+----------+------------------------------------------------------------------+----------------------------+
+{% for row in creds %}| {{ "%-2d"|format(row.id) }} | {{ "%-18s"|format(row.hostname) }} | {{ "%-8s"|format(row.username) }} | {{ "%-64s"|format(row.password_hash) }} | {{ "%-26s"|format(row.notes) }} |
+{% endfor %}+----+--------------------+----------+------------------------------------------------------------------+----------------------------+
 
-Target: Crack the sysop MD5 hash
-Tool suggestion: hashcat -m 0 hash.txt wordlist.txt
-            or: john --format=raw-md5 hash.txt --wordlist=wordlist.txt
+Target: Crack the sysop MD5 hash (32 hex chars)
+Tool suggestion: hashcat -m 0 hash.txt /usr/share/wordlists/rockyou.txt
+            or: john --format=raw-md5 hash.txt --wordlist=/usr/share/wordlists/rockyou.txt
 </pre>
         </div>
     </div>
